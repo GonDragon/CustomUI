@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+  <packageId>GonDragon.CustomUI</packageId>
+  <name>Custom UI</name>
+  <author>GonDragon</author>
+  <description>The son of UI Not Included.</description>
+  <supportedVersions>
+    <li>1.4</li>
+  </supportedVersions>
+</ModMetaData>
