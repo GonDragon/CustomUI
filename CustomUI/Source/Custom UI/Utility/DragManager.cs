@@ -29,7 +29,7 @@ namespace CustomUI.Utility
             this.drawDragged = drawDragged;
         }
 
-        public bool TryStartDrag(T draggee, Rect rect)
+        public bool TryStartDrag(T draggee, Rect rect, int index)
         {
             if (DraggingNow)
             {
@@ -51,6 +51,7 @@ namespace CustomUI.Utility
             {
                 Dragging.element = draggee;
                 Dragging.width = (int) rect.width;
+                Dragging.index = index;
                 dragOffset = rect.position - UI.MousePositionOnUIInverted;
                 return true;
             }
@@ -90,7 +91,7 @@ namespace CustomUI.Utility
 
     public struct DragElement<T>
     {
-        public int pos;
+        public int index;
         public T element;
         public int width;
     }

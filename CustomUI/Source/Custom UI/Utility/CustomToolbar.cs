@@ -22,6 +22,7 @@ namespace CustomUI.Utility
         private static readonly List<MainButtonDef> allButtonsInOrder;
         private static readonly DragManager<MainButtonDef> manager;
         private static readonly List<int> buttonSizeCache;
+        private static int lastIndex = 0;
 
         //TODO - Convertir en lista de structs, para múltiples barras.
         private static float fixedWidth = 0f;
@@ -43,6 +44,7 @@ namespace CustomUI.Utility
 
             GUI.color = Color.white;
             int curX = 0;
+            bool shouldDrawAtEnd = true;
             for (int index = 0; index < allButtonsInOrder.Count; ++index)
             {
                 MainButtonDef button = allButtonsInOrder[index];
@@ -55,37 +57,41 @@ namespace CustomUI.Utility
                 if (UIManager.editionModeEnabled)
                 {
                     bool mouseOverButton = Mouse.IsOver(buttonRect);
-                    if (manager.Dragging.element == button) 
+                    bool mouseOverBar = Mouse.IsOver(inRect);
+
+                    if(manager.DraggingNow)
                     {
-                        if (!Mouse.IsOver(inRect))
+                        if (manager.Dragging.index == index)
                         {
-                            int offset = manager.Dragging.width;
-                            buttonRect.x += offset;
-                            curX += offset;
-                        }                        
-                        continue;
-                    }
-                    if (mouseOverButton)
-                    {
-                        if (manager.DraggingNow)
+                            if(!mouseOverBar)
+                            {
+                                int offset = manager.Dragging.width;
+                                buttonRect.x += offset;
+                                curX += offset;
+                            }
+                            continue;
+                        }
+
+                        if (mouseOverButton)
                         {
                             manager.mouseoverIdx = index;
 
                             Rect draggedRect = new Rect(buttonRect.x, buttonRect.y, manager.Dragging.width, buttonRect.height);
                             DrawWithConfigIcon(manager.Dragging.element, draggedRect);
+                            shouldDrawAtEnd = false;
+
 
                             buttonRect.x += manager.Dragging.width;
                             curX += manager.Dragging.width;
                         }
-                    }
-                    
+                    }                    
 
-                    if (Mouse.IsOver(buttonRect) && Input.GetMouseButtonDown(1))
+                    if (mouseOverButton && Input.GetMouseButtonDown(1))
                     {
                         CustomUI.Log("Edit");
                         Event.current.Use();
                     }
-                    if (manager.TryStartDrag(button, buttonRect)) CustomUI.Log("TryDrag");
+                    if (manager.TryStartDrag(button, buttonRect, index)) CustomUI.Log("TryDrag");
 
                     DrawWithConfigIcon(button, buttonRect);
 
@@ -107,8 +113,17 @@ namespace CustomUI.Utility
             //* Edit Mode ONLY - Just Once *//
             if (UIManager.editionModeEnabled)
             {
+
                 if (manager.DraggingNow)
                 {
+                    if (shouldDrawAtEnd)
+                    {
+                        manager.mouseoverIdx = lastIndex;
+
+                        Rect draggedRect = new Rect(curX, (UI.screenHeight - Height), manager.Dragging.width, Height);
+                        DrawWithConfigIcon(manager.Dragging.element, draggedRect);
+                    }
+
                     manager.DragDropOnGUI((dragButton) => CustomUI.Log($"Stop Drag For {dragButton.defName}"), !Mouse.IsOver(inRect));
                 }
             }
@@ -159,7 +174,7 @@ namespace CustomUI.Utility
                 buttonSizeCache[index] = elasticElementWidth;
             }
 
-            int lastIndex = allButtonsInOrder.FindLastIndex((Predicate<MainButtonDef>)(x => x.Worker.Visible));
+            lastIndex = allButtonsInOrder.FindLastIndex((Predicate<MainButtonDef>)(x => x.Worker.Visible));
             int allButtonsSize = 0;
             buttonSizeCache.Do((size) => allButtonsSize += size);
 
