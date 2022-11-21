@@ -21,6 +21,7 @@ namespace CustomUI.Utility
 
         private static readonly List<MainButtonDef> allButtonsInOrder;
         private static readonly DragManager<MainButtonDef> manager;
+        private static readonly List<int> buttonSizeCache;
 
         //TODO - Convertir en lista de structs, para múltiples barras.
         private static float fixedWidth = 0f;
@@ -32,17 +33,15 @@ namespace CustomUI.Utility
         {
             allButtonsInOrder = (List<MainButtonDef>)AccessTools.Field(typeof(MainButtonsRoot),"allButtonsInOrder").GetValue(Find.MainButtonsRoot);
             manager = new DragManager<MainButtonDef>((button, topLeft, width) => button.Worker.DoButton(new Rect(topLeft, new Vector2(width, Height))));
+            buttonSizeCache = new List<int>();
 
             OnChange();
         }
 
         public static void OnGui()
         {
-            int elasticSpaceAvaible = (int)(Width - fixedWidth);
-            int elasticElementWidth = elasticSpaceAvaible / elasticElements;
 
             GUI.color = Color.white;
-            int lastIndex = allButtonsInOrder.FindLastIndex((Predicate<MainButtonDef>)(x => x.Worker.Visible));
             int curX = 0;
             for (int index = 0; index < allButtonsInOrder.Count; ++index)
             {
@@ -50,11 +49,7 @@ namespace CustomUI.Utility
 
                 if (!button.Worker.Visible) continue;
 
-                int width = (int)(button.minimized ? minimizedWidth : elasticElementWidth);
-                if (index == lastIndex)
-                    width = UI.screenWidth - curX;
-
-                Rect buttonRect = new Rect(curX, (UI.screenHeight - Height), width, Height);
+                Rect buttonRect = new Rect(curX, (UI.screenHeight - Height), buttonSizeCache[index], Height);
 
                 //* Edit Mode ONLY - Once per Button *//
                 if (UIManager.editionModeEnabled)
@@ -79,10 +74,8 @@ namespace CustomUI.Utility
                             Rect draggedRect = new Rect(buttonRect.x, buttonRect.y, manager.Dragging.width, buttonRect.height);
                             DrawWithConfigIcon(manager.Dragging.element, draggedRect);
 
-                            //int offset = manager.Dragging.element.minimized ? minimizedWidth : elasticElementWidth;
-                            int offset = manager.Dragging.width;
-                            buttonRect.x += offset;
-                            curX += offset;
+                            buttonRect.x += manager.Dragging.width;
+                            curX += manager.Dragging.width;
                         }
                     }
                     
@@ -108,7 +101,7 @@ namespace CustomUI.Utility
                     button.Worker.DoButton(buttonRect);
                 }
 
-                curX += width;
+                curX += buttonSizeCache[index];
             }
 
             //* Edit Mode ONLY - Just Once *//
@@ -123,25 +116,54 @@ namespace CustomUI.Utility
 
         public static void OnChange()
         {
+            List<int> indexElasticWidth = new List<int>();
+            buttonSizeCache.Clear();
             elasticElements = 0;
             fixedWidth = 0;
 
-            foreach(MainButtonDef button in allButtonsInOrder)
+            for (int index = 0; index < allButtonsInOrder.Count; ++index)
             {
-                if (!button.Worker.Visible) continue;
-                
+                if (!allButtonsInOrder[index].Worker.Visible)
+                {
+                    buttonSizeCache.Add(0);
+                    continue;
+                }
+
                 // Cambiar para tomar en cuenta ancho fijo
-                if (!button.minimized) elasticElements++;
-                else fixedWidth += minimizedWidth;
+                if (!allButtonsInOrder[index].minimized)
+                {
+                    buttonSizeCache.Add(-1);
+                    indexElasticWidth.Add(index);
+                    elasticElements++;
+                }
+                else
+                {
+                    buttonSizeCache.Add(minimizedWidth);
+                    fixedWidth += minimizedWidth;
+                }
             }
 
-            // Si está sobre una de las barras
-            if (Mouse.IsOver(inRect) && manager.DraggingNow)
+            // Algo asi probablemente sirva con multiples barras
+            //if (Mouse.IsOver(inRect) && manager.DraggingNow)
+            //{
+            //    // Cambiar para tomar en cuenta ancho fijo
+            //    if (!manager.Dragging.element.minimized) elasticElements++;
+            //    else fixedWidth += minimizedWidth;
+            //}
+
+            int elasticSpaceAvaible = (int)(Width - fixedWidth);
+            int elasticElementWidth = elasticSpaceAvaible / elasticElements;
+
+            foreach (int index in indexElasticWidth)
             {
-                // Cambiar para tomar en cuenta ancho fijo
-                if (!manager.Dragging.element.minimized) elasticElements++;
-                else fixedWidth += minimizedWidth;
+                buttonSizeCache[index] = elasticElementWidth;
             }
+
+            int lastIndex = allButtonsInOrder.FindLastIndex((Predicate<MainButtonDef>)(x => x.Worker.Visible));
+            int allButtonsSize = 0;
+            buttonSizeCache.Do((size) => allButtonsSize += size);
+
+            buttonSizeCache[lastIndex] += UI.screenWidth - allButtonsSize;
         }
 
         public static void DrawWithConfigIcon(MainButtonDef button, Rect space)
