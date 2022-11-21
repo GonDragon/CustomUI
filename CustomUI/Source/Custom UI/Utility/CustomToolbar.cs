@@ -126,9 +126,13 @@ namespace CustomUI.Utility
                             {
                                 replaceIndex--;
                             }
+                            dragButton.element.order = allButtonsInOrder[replaceIndex].order + 1;
+                        } else
+                        {
+                            dragButton.element.order = allButtonsInOrder[replaceIndex].order - 1;
                         }
-                        CustomUI.Log($"Dragged Index: {dragButton.index} - Displaced Index: {replaceIndex}");
-                        CustomUI.Warning($"DraggedButton: {dragButton.element.defName} - DisplacedButton: {allButtonsInOrder[replaceIndex]}");
+                        
+                        OnChange();
                         return true;
                     });
 
@@ -139,6 +143,7 @@ namespace CustomUI.Utility
 
         public static void OnChange()
         {
+            allButtonsInOrder.SortBy(x => x.order);
             List<int> indexElasticWidth = new List<int>();
             buttonSizeCache.Clear();
             elasticElements = 0;
@@ -187,6 +192,13 @@ namespace CustomUI.Utility
             buttonSizeCache.Do((size) => allButtonsSize += size);
 
             buttonSizeCache[lastIndex] += UI.screenWidth - allButtonsSize;
+
+            int minOrder = 0;
+            allButtonsInOrder.Do((button) =>
+            {
+                button.order = minOrder;
+                minOrder += 10;
+            });
         }
 
         public static void DrawWithConfigIcon(MainButtonDef button, Rect space)
