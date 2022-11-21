@@ -19,9 +19,6 @@ namespace CustomUI.Utility
 #endif
         public static float DragStartDistanceSquared = 20f;
 
-        //PLACEHOLDER
-        public int mouseoverIdx = 0;
-
         public bool DraggingNow => Dragging.element != null;
         public DragElement<T> Dragging = new DragElement<T>();
         public DragManager(Action<T, Vector2, int> drawDragged)
@@ -59,12 +56,12 @@ namespace CustomUI.Utility
             return false;
         }
 
-        public void DropLocation(Rect rect, Action<T> onOver, Func<T, bool> onDrop)
+        public void DropLocation(Rect rect, Action<T> onOver, Func<DragElement<T>, bool> onDrop)
         {
             if (Mouse.IsOver(rect) && Dragging.element != null)
             {
                 onOver?.Invoke(Dragging.element);
-                if (!Input.GetMouseButton(0) && onDrop(Dragging.element))
+                if (!Input.GetMouseButton(0) && onDrop(Dragging))
                 {
                     dragOffset = Vector2.zero;
                     Dragging = default;

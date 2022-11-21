@@ -45,6 +45,8 @@ namespace CustomUI.Utility
             GUI.color = Color.white;
             int curX = 0;
             bool shouldDrawAtEnd = true;
+            int replaceIndex = 0;
+            bool isLastIndex = false;
             for (int index = 0; index < allButtonsInOrder.Count; ++index)
             {
                 MainButtonDef button = allButtonsInOrder[index];
@@ -74,12 +76,10 @@ namespace CustomUI.Utility
 
                         if (mouseOverButton)
                         {
-                            manager.mouseoverIdx = index;
-
                             Rect draggedRect = new Rect(buttonRect.x, buttonRect.y, manager.Dragging.width, buttonRect.height);
                             DrawWithConfigIcon(manager.Dragging.element, draggedRect);
                             shouldDrawAtEnd = false;
-
+                            replaceIndex = index;
 
                             buttonRect.x += manager.Dragging.width;
                             curX += manager.Dragging.width;
@@ -94,13 +94,6 @@ namespace CustomUI.Utility
                     if (manager.TryStartDrag(button, buttonRect, index)) CustomUI.Log("TryDrag");
 
                     DrawWithConfigIcon(button, buttonRect);
-
-                    manager.DropLocation(inRect, null, dragButton =>
-                    {
-                        CustomUI.Log($"MouseoverID: {manager.mouseoverIdx} - Button: {dragButton.defName}");
-                        return true;
-                    });
-
 
                 } else
                 {
@@ -118,11 +111,26 @@ namespace CustomUI.Utility
                 {
                     if (shouldDrawAtEnd)
                     {
-                        manager.mouseoverIdx = lastIndex;
-
                         Rect draggedRect = new Rect(curX, (UI.screenHeight - Height), manager.Dragging.width, Height);
                         DrawWithConfigIcon(manager.Dragging.element, draggedRect);
+                        replaceIndex = lastIndex;
+                        isLastIndex = true;
                     }
+
+                    manager.DropLocation(inRect, null, dragButton =>
+                    {
+                        if (replaceIndex > dragButton.index && !isLastIndex)
+                        {
+                            replaceIndex--;
+                            while (!allButtonsInOrder[replaceIndex].Worker.Visible)
+                            {
+                                replaceIndex--;
+                            }
+                        }
+                        CustomUI.Log($"Dragged Index: {dragButton.index} - Displaced Index: {replaceIndex}");
+                        CustomUI.Warning($"DraggedButton: {dragButton.element.defName} - DisplacedButton: {allButtonsInOrder[replaceIndex]}");
+                        return true;
+                    });
 
                     manager.DragDropOnGUI((dragButton) => CustomUI.Log($"Stop Drag For {dragButton.defName}"), !Mouse.IsOver(inRect));
                 }
