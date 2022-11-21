@@ -44,7 +44,6 @@ namespace CustomUI.Utility
             GUI.color = Color.white;
             int lastIndex = allButtonsInOrder.FindLastIndex((Predicate<MainButtonDef>)(x => x.Worker.Visible));
             int curX = 0;
-            int draggedWidth = 0;
             for (int index = 0; index < allButtonsInOrder.Count; ++index)
             {
                 MainButtonDef button = allButtonsInOrder[index];
@@ -61,12 +60,11 @@ namespace CustomUI.Utility
                 if (UIManager.editionModeEnabled)
                 {
                     bool mouseOverButton = Mouse.IsOver(buttonRect);
-                    if (manager.Dragging == button) 
+                    if (manager.Dragging.element == button) 
                     {
-                        draggedWidth = width;
                         if (!Mouse.IsOver(inRect))
                         {
-                            int offset = draggedWidth;
+                            int offset = manager.Dragging.width;
                             buttonRect.x += offset;
                             curX += offset;
                         }                        
@@ -78,9 +76,11 @@ namespace CustomUI.Utility
                         {
                             manager.mouseoverIdx = index;
 
-                            DrawWithConfigIcon(manager.Dragging, buttonRect);
+                            Rect draggedRect = new Rect(buttonRect.x, buttonRect.y, manager.Dragging.width, buttonRect.height);
+                            DrawWithConfigIcon(manager.Dragging.element, draggedRect);
 
-                            int offset = manager.Dragging.minimized ? minimizedWidth : elasticElementWidth;
+                            //int offset = manager.Dragging.element.minimized ? minimizedWidth : elasticElementWidth;
+                            int offset = manager.Dragging.width;
                             buttonRect.x += offset;
                             curX += offset;
                         }
@@ -98,7 +98,7 @@ namespace CustomUI.Utility
 
                     manager.DropLocation(inRect, null, dragButton =>
                     {
-                        CustomUI.Log($"MouseoverID: {manager.mouseoverIdx} - Botton: {dragButton.defName}");
+                        CustomUI.Log($"MouseoverID: {manager.mouseoverIdx} - Button: {dragButton.defName}");
                         return true;
                     });
 
@@ -116,7 +116,7 @@ namespace CustomUI.Utility
             {
                 if (manager.DraggingNow)
                 {
-                    manager.DragDropOnGUI((dragButton) => CustomUI.Log($"Stop Drag For {dragButton.defName}"), !Mouse.IsOver(inRect), draggedWidth);
+                    manager.DragDropOnGUI((dragButton) => CustomUI.Log($"Stop Drag For {dragButton.defName}"), !Mouse.IsOver(inRect));
                 }
             }
         }
@@ -139,7 +139,7 @@ namespace CustomUI.Utility
             if (Mouse.IsOver(inRect) && manager.DraggingNow)
             {
                 // Cambiar para tomar en cuenta ancho fijo
-                if (!manager.Dragging.minimized) elasticElements++;
+                if (!manager.Dragging.element.minimized) elasticElements++;
                 else fixedWidth += minimizedWidth;
             }
         }
