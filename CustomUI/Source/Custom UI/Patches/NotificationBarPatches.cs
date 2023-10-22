@@ -9,6 +9,83 @@ using Verse;
 
 namespace CustomUI.Patches
 {
+
+    [HarmonyPatch(typeof(GlobalControls), "GlobalControlsOnGUI")]
+    internal class GlobalControl_TranspilerPatch
+    {
+        private static readonly MethodInfo utility_DoDate = AccessTools.Method(typeof(GlobalControlsUtility), "DoDate");
+        private static readonly MethodInfo globalControls_Temperaturestring = AccessTools.Method(typeof(GlobalControls), "TemperatureString");
+
+        private static IEnumerable<CodeInstruction> Transpiler(ILGenerator gen, IEnumerable<CodeInstruction> instructions)
+        {
+            CodeInstruction prev = instructions.First();
+            bool patchWeater = false;
+            bool patchWeater_finish = false;
+            bool patchedTemp = false;
+
+            foreach (var code in instructions)
+            {
+                if (!patchWeater)
+                {
+                    if (prev.opcode == OpCodes.Call && (MethodInfo)prev.operand == utility_DoDate)
+                    {
+                        patchWeater = true;
+
+                        yield return new CodeInstruction(OpCodes.Ldloc_0);
+                        yield return new CodeInstruction(OpCodes.Ldloca_S, 1);
+                        yield return new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(GlobalControl_TranspilerPatch), nameof(DoWeather)));
+                        continue;
+                    }
+                    yield return code;
+                    prev = code;
+                }
+                else if (!patchWeater_finish)
+                {
+                    if (prev.opcode == OpCodes.Newobj)
+                    {
+                        yield return code;
+                        patchWeater_finish = true;
+                    }
+                    prev = code;
+                }
+                else if (!patchedTemp)
+                {
+                    if (prev.opcode == OpCodes.Call && (MethodInfo)prev.operand == globalControls_Temperaturestring)
+                    {
+                        patchedTemp = true;
+
+                        yield return new CodeInstruction(OpCodes.Ldloc_0);
+                        yield return new CodeInstruction(OpCodes.Ldloca_S, 1);
+                        yield return new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(GlobalControl_TranspilerPatch), nameof(DoTemperature)));
+                        continue;
+                    }
+                    yield return code;
+                    prev = code;
+                }
+                else
+                {
+                    yield return code;
+                }
+            }
+        }
+
+        private static void DoWeather(float x, ref float y)
+        {
+            if (!Settings.vanillaWeather) return;
+            y -= 26f;
+            Rect rect = new Rect(x - 22f, y, 230f, 26f);
+            Find.CurrentMap.weatherManager.DoWeatherGUI(rect);
+        }
+
+        private static void DoTemperature(string label, float x, ref float y)
+        {
+            if (!Settings.vanillaTemperature) return;
+            y -= 26f;
+            Rect rect = new Rect(x - 100f, y, 293f, 26f);
+            Widgets.Label(rect, label);
+        }
+    }
+
     [HarmonyPatch(typeof(GlobalControlsUtility))]
     internal class GlobalControlsUtilityPatches
     {
