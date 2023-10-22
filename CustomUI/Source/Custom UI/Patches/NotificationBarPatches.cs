@@ -33,5 +33,14 @@ namespace CustomUI.Patches
             if (!Settings.togglersOnTop) curBaseY = rowVisibility.FinalY;
             return false;
         }
+
+        [HarmonyPrefix]
+        [HarmonyPatch(nameof(GlobalControlsUtility.DoRealtimeClock)), HarmonyPriority(Priority.Low)]
+        private static bool DoRealtimeClock_Patch(ref float curBaseY)
+        {
+            if (Settings.vanillaRealtime) return true;
+            curBaseY += 4f;
+            return false;
+        }
     }
 }
