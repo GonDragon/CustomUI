@@ -52,7 +52,7 @@ namespace CustomUI.Windows
             Rect inRect = rect;
             inRect.height -= Window.CloseButSize.y;
             Verse.Text.Font = GameFont.Medium;
-            Widgets.Label(new Rect(inRect.x, inRect.y, rect.width, 35f), "UINotIncluded.Windows.EditButton".Translate());
+            Widgets.Label(new Rect(inRect.x, inRect.y, rect.width, 35f), "CustomUI.Windows.EditButton".Translate());
             Verse.Text.Font = GameFont.Small;
             string defaultLabel = (string)"Default".Translate();
             inRect.yMin += 45f;
@@ -78,7 +78,7 @@ namespace CustomUI.Windows
 
             Rect minimizedRect = new Rect(inRect.x, curY, width * 2 - Widgets.CheckboxSize - 11f, EditMainButton_Window.EditFieldHeight);
             Rect defaultMinimizedRect = new Rect(minimizedRect.xMax + 10f, curY, EditMainButton_Window.ResetButtonWidth, EditMainButton_Window.EditFieldHeight);
-            Widgets.CheckboxLabeled(minimizedRect, "UINotIncluded.Windows.Minimize".Translate(), ref config.minimized);
+            Widgets.CheckboxLabeled(minimizedRect, "CustomUI.Windows.Minimize".Translate(), ref config.minimized);
 
             if (Widgets.ButtonText(defaultMinimizedRect, defaultLabel))
             {
