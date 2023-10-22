@@ -35,6 +35,22 @@ namespace CustomUI.Patches
         }
 
         [HarmonyPrefix]
+        [HarmonyPatch(nameof(GlobalControlsUtility.DoTimespeedControls)), HarmonyPriority(Priority.Low)]
+        private static bool DoTimespeedControls_Patch(ref float curBaseY)
+        {
+            if (Settings.vanillaControlSpeed) return true;
+            curBaseY += 4f;
+            return false;
+        }
+
+        [HarmonyPrefix]
+        [HarmonyPatch(nameof(GlobalControlsUtility.DoDate)), HarmonyPriority(Priority.Low)]
+        private static bool DoDate_Patch()
+        {
+            return Settings.vanillaDate;
+        }
+
+        [HarmonyPrefix]
         [HarmonyPatch(nameof(GlobalControlsUtility.DoRealtimeClock)), HarmonyPriority(Priority.Low)]
         private static bool DoRealtimeClock_Patch(ref float curBaseY)
         {
