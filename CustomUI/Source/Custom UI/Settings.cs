@@ -1,4 +1,5 @@
-﻿using RimWorld;
+﻿using CustomUI.Utility;
+using RimWorld;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,6 +19,8 @@ namespace CustomUI
         public static bool vanillaWeather = true;
         public static bool vanillaTemperature = true;
 
+        public static List<MainButtonProxy> mainButtonProxies = new List<MainButtonProxy>();
+
         public override void ExposeData()
         {
             Scribe_Values.Look(ref togglersOnTop, "togglersOnTop", true);
@@ -28,6 +31,8 @@ namespace CustomUI
             Scribe_Values.Look(ref vanillaRealtime, "vanillaRealtime", false);
             Scribe_Values.Look(ref vanillaWeather, "vanillaWeather", false);
             Scribe_Values.Look(ref vanillaTemperature, "vanillaTemperature", false);
+
+            Scribe_Collections.Look(ref mainButtonProxies, "buttons" ,LookMode.Deep);
 
             base.ExposeData();
         }

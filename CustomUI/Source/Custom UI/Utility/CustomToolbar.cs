@@ -35,7 +35,7 @@ namespace CustomUI.Utility
             allButtonsInOrder = (List<MainButtonDef>)AccessTools.Field(typeof(MainButtonsRoot),"allButtonsInOrder").GetValue(Find.MainButtonsRoot);
             manager = new DragManager<MainButtonDef>((button, topLeft, width) => button.Worker.DoButton(new Rect(topLeft, new Vector2(width, Height))));
             buttonSizeCache = new List<int>();
-
+            Sync();
             OnChange();
         }
 
@@ -199,6 +199,8 @@ namespace CustomUI.Utility
                 button.order = minOrder;
                 minOrder += 10;
             });
+
+            Persist();
         }
 
         public static void DrawWithConfigIcon(MainButtonDef button, Rect space)
@@ -211,6 +213,61 @@ namespace CustomUI.Utility
             GUI.DrawTexture(configSpace, Textures.configIcon);
 
             GUI.EndGroup();
+        }
+
+        public static void Persist()
+        {
+            List<MainButtonProxy> buttonsToAdd = new List<MainButtonProxy>();
+            foreach (MainButtonDef buttonDef in allButtonsInOrder)
+            {
+                bool found = false;
+                foreach(MainButtonProxy proxy in Settings.mainButtonProxies)
+                {
+                    if (proxy.defName == buttonDef.defName)
+                    {
+                        proxy.visible = buttonDef.buttonVisible;
+                        proxy.toolbar = 0; // TODO - Multiple Toolbars
+                        proxy.order = buttonDef.order;
+                        proxy.minimized = buttonDef.minimized;
+                        found = true;
+                        break;
+                    }
+                }
+
+                if(!found)
+                {
+                    MainButtonProxy newButton = new MainButtonProxy(buttonDef.buttonVisible,buttonDef.order,buttonDef.minimized,0,buttonDef.defName); // TODO - Multiple Toolbars
+                    buttonsToAdd.Add(newButton);
+                }
+            }
+
+            foreach (MainButtonProxy button in buttonsToAdd)
+            {
+                Settings.mainButtonProxies.Add(button);
+            }
+
+            SettingsWindow.settings.Write();
+        }
+
+        public static void Sync()
+        {
+            if (Settings.mainButtonProxies == null)
+            {
+                Settings.mainButtonProxies = new List<MainButtonProxy>();
+            }
+            foreach (MainButtonProxy proxy in Settings.mainButtonProxies)
+            {
+                foreach (MainButtonDef buttonDef in allButtonsInOrder)
+                {
+                    if (buttonDef.defName == proxy.defName)
+                    {
+                        buttonDef.buttonVisible = proxy.visible;
+                        buttonDef.order = proxy.order;
+                        buttonDef.minimized = proxy.minimized;
+                        // TODO - multiple toolbars and icon
+                    }
+                }
+            }
         }
     }
 }
