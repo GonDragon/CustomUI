@@ -7,16 +7,23 @@ using UnityEngine;
 using Verse;
 using Verse.Sound;
 using CustomUI.Utility;
+using HarmonyLib;
 
 namespace CustomUI.Windows
 {
     public class EditMainButton_Window : Window
     {
-        internal readonly ButtonConfig config;
+        internal readonly MainButtonDef buttonDef;
 
-        //private string newLabel;
-        //private string iconPath;
-        //private bool newMinimized;
+        internal string originalLabel;
+        internal bool originalMinimized;
+        internal bool originalVisible;
+        internal string originalIconPath;
+
+        internal string tempLabel;
+        internal bool tempMinimized;
+        internal bool tempVisible;
+
         private Vector2 scrollPos;
 
         private float viewHeight;
@@ -34,16 +41,28 @@ namespace CustomUI.Windows
         private static List<string> cacheIconsPath;
 
         public override Vector2 InitialSize => new Vector2(350f, 600f);
+        public new bool doCloseX = false;
 
-        public EditMainButton_Window(ButtonConfig config)
+        public EditMainButton_Window(MainButtonDef buttonDef)
         {
-            this.config = config;
+            this.buttonDef = buttonDef;
+            
+            this.originalLabel = buttonDef.label;
+            this.originalVisible = buttonDef.buttonVisible;
+            this.originalMinimized = buttonDef.minimized;
+            this.originalIconPath = buttonDef.iconPath;
+
+            this.tempLabel = buttonDef.label;
+            this.tempVisible = buttonDef.buttonVisible;
+            this.tempMinimized = buttonDef.minimized;
+
             absorbInputAroundWindow = true;
         }
 
         public override void OnAcceptKeyPressed()
         {
             TryAccept();
+            CustomToolbar.Persist();
             Event.current.Use();
         }
 
@@ -58,42 +77,24 @@ namespace CustomUI.Windows
             inRect.yMin += 45f;
             float curY = inRect.y;
             float iconX = (float)Math.Floor(inRect.width / 2) - 44f;
-            if (config.Icon != null) GUI.DrawTexture(new Rect(rect.x + iconX, curY + 5f, 88f, 88f), (Texture)config.Icon);
+            if (buttonDef.Icon != null) GUI.DrawTexture(new Rect(rect.x + iconX, curY + 5f, 88f, 88f), (Texture)buttonDef.Icon);
             curY += 93f;
             float x = inRect.x + inRect.width / 3f;
             float width = (float)((double)inRect.xMax - (double)x - (double)EditMainButton_Window.ResetButtonWidth - 10.0);
             float labelY = curY;
             Widgets.Label(inRect.x, ref labelY, inRect.width, (string)"Name".Translate());
-            config.Label = Widgets.TextField(new Rect(x, curY, width, EditMainButton_Window.EditFieldHeight), config.Label, 40, EditMainButton_Window.ValidSymbolRegex);
+            buttonDef.label = Widgets.TextField(new Rect(x, curY, width, EditMainButton_Window.EditFieldHeight), buttonDef.label, 40, EditMainButton_Window.ValidSymbolRegex);
 
-            Rect labelRect = new Rect(x, curY, width, EditMainButton_Window.EditFieldHeight);
-            Rect defaultLabelRect = new Rect(labelRect.xMax + 10f, curY, EditMainButton_Window.ResetButtonWidth, EditMainButton_Window.EditFieldHeight);
-
-            if (Widgets.ButtonText(defaultLabelRect, defaultLabel))
-            {
-                SoundDefOf.Click.PlayOneShotOnCamera();
-                config.Label = config.Def.label;
-            }
             curY += (EditMainButton_Window.EditFieldHeight + 10f);
 
             Rect minimizedRect = new Rect(inRect.x, curY, width * 2 - Widgets.CheckboxSize - 11f, EditMainButton_Window.EditFieldHeight);
             Rect defaultMinimizedRect = new Rect(minimizedRect.xMax + 10f, curY, EditMainButton_Window.ResetButtonWidth, EditMainButton_Window.EditFieldHeight);
-            Widgets.CheckboxLabeled(minimizedRect, "CustomUI.Windows.Minimize".Translate(), ref config.minimized);
+            Widgets.CheckboxLabeled(minimizedRect, "CustomUI.Windows.Minimize".Translate(), ref buttonDef.minimized);
 
-            if (Widgets.ButtonText(defaultMinimizedRect, defaultLabel))
-            {
-                SoundDefOf.Click.PlayOneShotOnCamera();
-                config.minimized = ((MainButtonDef)config.Def).minimized;
-            }
             curY += (EditMainButton_Window.EditFieldHeight + 10f);
 
             Rect hidelabelRect = new Rect(inRect.x, curY, width * 2 - Widgets.CheckboxSize - 11f, EditMainButton_Window.EditFieldHeight);
-            Widgets.CheckboxLabeled(hidelabelRect, "Hide label", ref config.hideLabel);
-
-            curY += (EditMainButton_Window.EditFieldHeight + 10f);
-
-            Rect forcheShow = new Rect(inRect.x, curY, width * 2 - Widgets.CheckboxSize - 11f, EditMainButton_Window.EditFieldHeight);
-            Widgets.CheckboxLabeled(forcheShow, "Force visible", ref config.forceShow);
+            Widgets.CheckboxLabeled(hidelabelRect, "Visible", ref buttonDef.buttonVisible);
 
             curY += (EditMainButton_Window.EditFieldHeight + 10f);
 
@@ -101,11 +102,6 @@ namespace CustomUI.Windows
             Rect defaulticonRect = new Rect(minimizedRect.xMax + 10f, curY, EditMainButton_Window.ResetButtonWidth, EditMainButton_Window.EditFieldHeight);
             Widgets.Label(iconRect, "Icon".Translate());
 
-            if (Widgets.ButtonText(defaulticonRect, defaultLabel))
-            {
-                SoundDefOf.Click.PlayOneShotOnCamera();
-                config.IconPath = ((MainButtonDef)config.Def).iconPath;
-            }
             curY += (EditMainButton_Window.EditFieldHeight + 10f);
 
             Rect iconSelectorRect = inRect;
@@ -113,9 +109,18 @@ namespace CustomUI.Windows
             iconSelectorRect.yMin = curY;
 
             DoIconSelector(iconSelectorRect);
-            if (Widgets.ButtonText(new Rect(0.0f, rect.height - EditMainButton_Window.ButSize.y, EditMainButton_Window.ButSize.x, EditMainButton_Window.ButSize.y), (string)"Reset".Translate()))
+
+            CheckForChanges();
+            if (Widgets.ButtonText(new Rect(0.0f, rect.height - EditMainButton_Window.ButSize.y, EditMainButton_Window.ButSize.x, EditMainButton_Window.ButSize.y), (string)"Cancel".Translate()))
             {
-                //config.Reset(); TODO
+                buttonDef.buttonVisible = this.originalVisible;
+                buttonDef.minimized = this.originalMinimized;
+                buttonDef.label = this.originalLabel;
+                buttonDef.iconPath = this.originalIconPath;
+                CustomToolbar.OnChange();
+                Traverse.Create(buttonDef).Field("cachedLabelCap").SetValue((TaggedString)(string)null);
+                Traverse.Create(buttonDef).Field("icon").SetValue(null);
+
                 Close();
             }
             if (!Widgets.ButtonText(new Rect(InitialSize.x - EditMainButton_Window.ButSize.x - (this.Margin * 2), rect.height - EditMainButton_Window.ButSize.y, EditMainButton_Window.ButSize.x, EditMainButton_Window.ButSize.y), (string)"DoneButton".Translate()))
@@ -143,13 +148,14 @@ namespace CustomUI.Windows
                 Rect rect = new Rect((float)(((double)viewRect.width - (double)(num7 * num1) - (double)((num7 - 1) * 5)) / 2.0) + (float)(num6 * num1) + (float)(num6 * 5), (float)(num5 * num1 + num5 * 5), (float)num1, (float)num1);
                 Widgets.DrawLightHighlight(rect);
                 Widgets.DrawHighlightIfMouseover(rect);
-                if (iconPath == config.IconPath)
+                if (iconPath == buttonDef.iconPath)
                     Widgets.DrawBox(rect);
                 if (iconPath != null && cacheIcons[iconPath] != null) GUI.DrawTexture(new Rect(rect.x + 5f, rect.y + 5f, 40f, 40f), cacheIcons[iconPath]);
                 GUI.color = Color.white;
                 if (Widgets.ButtonInvisible(rect))
                 {
-                    config.IconPath = iconPath;
+                    buttonDef.iconPath = iconPath;
+                    Traverse.Create(buttonDef).Field("icon").SetValue(null);
                     SoundDefOf.Tick_High.PlayOneShotOnCamera();
                 }
                 viewHeight = Mathf.Max(viewHeight, rect.yMax);
@@ -181,9 +187,30 @@ namespace CustomUI.Windows
 
         private void TryAccept()
         {
-            if (!config.Label.NullOrEmpty())
-                config.Label = config.Label.Trim();
+            if (!buttonDef.label.NullOrEmpty())
+                buttonDef.label = buttonDef.label.Trim();
+                Traverse.Create(buttonDef).Field("cachedLabelCap").SetValue((TaggedString)(string)null);
             Close();
+        }
+
+        private void CheckForChanges()
+        {
+            if (this.tempLabel != buttonDef.label)
+            {
+                this.tempLabel = buttonDef.label;
+                Traverse.Create(buttonDef).Field("cachedLabelCap").SetValue((TaggedString)(string)null);
+
+            }
+            if (this.tempVisible != buttonDef.buttonVisible)
+            {
+                this.tempVisible = buttonDef.buttonVisible;
+                CustomToolbar.OnChange();
+            }
+            if (this.tempMinimized != buttonDef.minimized)
+            {
+                this.tempMinimized = buttonDef.minimized;
+                CustomToolbar.OnChange();
+            }
         }
     }
 }

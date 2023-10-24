@@ -205,6 +205,12 @@ namespace CustomUI.Utility
 
         public static void DrawWithConfigIcon(MainButtonDef button, Rect space)
         {
+            if (Widgets.ButtonInvisible(space, false))
+            {
+                //Open Window
+                Find.WindowStack.Add(new Windows.EditMainButton_Window(button));
+            }
+
             button.Worker.DoButton(space);
             GUI.BeginGroup(space);
 
