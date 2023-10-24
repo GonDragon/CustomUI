@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using CustomUI.Utility;
+using HarmonyLib;
 using RimWorld;
 using System;
 using System.Collections.Generic;
@@ -53,5 +54,6 @@ namespace CustomUI
         public static void Message(string message) => Messages.Message(message, MessageTypeDefOf.TaskCompletion, false);
 
         private static string PrefixMessage(string message) => $"[{Name} v{Version}] {message}";
+
     }
 }

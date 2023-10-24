@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
+using HarmonyLib;
 using Verse;
+using RimWorld;
 
 namespace CustomUI.Utility
 {
@@ -19,5 +21,6 @@ namespace CustomUI.Utility
 
         public MainIconDef()
         { }
+
     }
 }

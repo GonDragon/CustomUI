@@ -14,6 +14,7 @@ namespace CustomUI.Utility
         public bool minimized;
         public int toolbar;
         public string defName;
+        public string iconPath;
 
         public MainButtonProxy()
         {
@@ -22,14 +23,16 @@ namespace CustomUI.Utility
             this.minimized = false;
             this.toolbar = 0;
             this.defName = "";
+            this.iconPath = "";
         }
-        public MainButtonProxy(bool visible, int order, bool minimized, int toolbar, string defName)
+        public MainButtonProxy(bool visible, int order, bool minimized, int toolbar, string defName, string iconPath)
         {
             this.visible = visible;
             this.order = order;
             this.minimized = minimized;
             this.toolbar = toolbar;
             this.defName = defName;
+            this.iconPath = iconPath;
         }
 
         public void ExposeData()
@@ -39,6 +42,7 @@ namespace CustomUI.Utility
             Scribe_Values.Look(ref minimized, "minimized", false);
             Scribe_Values.Look(ref toolbar, "toolbar", 0);
             Scribe_Values.Look(ref defName, "defName", "");
+            Scribe_Values.Look(ref iconPath, "iconPath", "");
         }
     }
 }

@@ -229,6 +229,7 @@ namespace CustomUI.Utility
                         proxy.toolbar = 0; // TODO - Multiple Toolbars
                         proxy.order = buttonDef.order;
                         proxy.minimized = buttonDef.minimized;
+                        proxy.iconPath = buttonDef.iconPath;
                         found = true;
                         break;
                     }
@@ -236,7 +237,7 @@ namespace CustomUI.Utility
 
                 if(!found)
                 {
-                    MainButtonProxy newButton = new MainButtonProxy(buttonDef.buttonVisible,buttonDef.order,buttonDef.minimized,0,buttonDef.defName); // TODO - Multiple Toolbars
+                    MainButtonProxy newButton = new MainButtonProxy(buttonDef.buttonVisible,buttonDef.order,buttonDef.minimized,0,buttonDef.defName,buttonDef.iconPath); // TODO - Multiple Toolbars
                     buttonsToAdd.Add(newButton);
                 }
             }
@@ -251,6 +252,10 @@ namespace CustomUI.Utility
 
         public static void Sync()
         {
+            //
+            MainIconDef testIconDef = DefDatabase<MainIconDef>.AllDefs.First();
+            //
+
             if (Settings.mainButtonProxies == null)
             {
                 Settings.mainButtonProxies = new List<MainButtonProxy>();
@@ -264,8 +269,12 @@ namespace CustomUI.Utility
                         buttonDef.buttonVisible = proxy.visible;
                         buttonDef.order = proxy.order;
                         buttonDef.minimized = proxy.minimized;
-                        // TODO - multiple toolbars and icon
+                        buttonDef.iconPath = proxy.iconPath;
+                        Traverse.Create(buttonDef).Field("icon").SetValue(null);
+
+                        // TODO - multiple toolbars
                     }
+
                 }
             }
         }
