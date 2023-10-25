@@ -86,7 +86,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DefExtensions.cs" />
     <Compile Include="Mod.cs" />
     <Compile Include="Patches\DoPlaySettingsGlobalControls.cs" />
     <Compile Include="Patches\MainButtonRoot.cs" />
@@ -101,6 +100,7 @@
     <Compile Include="Utility\CustomToolbar.cs" />
     <Compile Include="Utility\DragManager.cs" />
     <Compile Include="Utility\Helper.cs" />
+    <Compile Include="Utility\IndividualToolbar.cs" />
     <Compile Include="Utility\MainButtonProxy.cs" />
     <Compile Include="Utility\MainButtonRendererMode.cs" />
     <Compile Include="Utility\MainIconDef.cs" />
