@@ -45,6 +45,7 @@ namespace CustomUI.Utility
 
             Sync();
             OnChange();
+
         }
 
         public static void OnGui()
@@ -238,14 +239,6 @@ namespace CustomUI.Utility
                 }
             }
 
-            // Algo asi probablemente sirva con multiples barras
-            //if (Mouse.IsOver(inRect) && manager.DraggingNow)
-            //{
-            //    // Cambiar para tomar en cuenta ancho fijo
-            //    if (!manager.Dragging.element.minimized) elasticElements++;
-            //    else fixedWidth += minimizedWidth;
-            //}
-
             foreach (IndividualToolbar toolbar in toolbarList)
             {
                 int elasticSpaceAvaible = (int)(Width - toolbar.fixedWidth);
@@ -259,11 +252,18 @@ namespace CustomUI.Utility
                 buttonSizeCache[index] = toolbar.elasticElementWidth;
             }
 
-            lastIndex = allButtonsInOrder.FindLastIndex((Predicate<MainButtonDef>)(x => x.Worker.Visible));
-            int allButtonsSize = 0;
-            buttonSizeCache.Do((size) => allButtonsSize += size);
+            for (int index = 0; index < toolbarList.Count; ++index)
+            {
+                int lastIndex = allButtonsInOrder.FindLastIndex((Predicate<MainButtonDef>)(x => x.Worker.Visible && (GetToolbar(x) == index)));
+                if (lastIndex < 0) continue;
 
-            buttonSizeCache[lastIndex] += UI.screenWidth - allButtonsSize;
+                int allButtonsSize = 0;
+                foreach(int buttonIndex in toolbarList[index].buttonsIndex)
+                {
+                    allButtonsSize += buttonSizeCache[buttonIndex];
+                }
+                buttonSizeCache[lastIndex] += UI.screenWidth - allButtonsSize;
+            }
 
             int minOrder = 0;
             allButtonsInOrder.Do((button) =>
