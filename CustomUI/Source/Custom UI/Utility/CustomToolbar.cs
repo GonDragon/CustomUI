@@ -222,6 +222,15 @@ namespace CustomUI.Utility
                 if (!allButtonsInOrder[index].Worker.Visible)
                 {
                     buttonSizeCache.Add(0);
+                    // If !allButtonsInOrder[index].minimized => {
+                    // buttonSizeCacheEditMode.Add(-1);
+                    // indexElasticWidthEditMode.add(index);
+                    // toolbar.elasticElementsEditMode++;
+                    // }
+                    // Else => { 
+                    // buttonSizeCacheEditMode.Add(minimizedWidth);
+                    // toolbar.fixedWidthEditMode += minimizedWidth;
+                    //}
                     continue;
                 }
 
@@ -231,11 +240,18 @@ namespace CustomUI.Utility
                     buttonSizeCache.Add(-1);
                     indexElasticWidth.Add(index);                    
                     toolbar.elasticElements++;
+
+                    // buttonSizeCacheEditMode.Add(-1);
+                    // indexElasticWidthEditMode.add(index);
+                    // toolbar.elasticElementsEditMode++;
                 }
                 else
                 {
                     buttonSizeCache.Add(minimizedWidth);
                     toolbar.fixedWidth += minimizedWidth;
+
+                    // buttonSizeCacheEditMode.Add(minimizedWidth);
+                    // toolbar.fixedWidthEditMode += minimizedWidth;
                 }
             }
 
@@ -243,6 +259,9 @@ namespace CustomUI.Utility
             {
                 int elasticSpaceAvaible = (int)(Width - toolbar.fixedWidth);
                 toolbar.elasticElementWidth = toolbar.elasticElements > 0 ? elasticSpaceAvaible / toolbar.elasticElements : 0;
+
+                // elasticSpaceAvaible = (int)(Width - toolbar.fixedWidthEditMode);
+                // toolbar.elasticElementWidthEditMode = toolbar.elasticElementsEditMode > 0 ? elasticSpaceAvaible / toolbar.elasticElementsEditMode : 0;
             }
 
 
@@ -250,7 +269,15 @@ namespace CustomUI.Utility
             {
                 IndividualToolbar toolbar = toolbarList[GetToolbar(allButtonsInOrder[index])];
                 buttonSizeCache[index] = toolbar.elasticElementWidth;
+
             }
+
+            // foreach (int index in indexElasticWidthEditMode)
+            // {
+            //     IndividualToolbar toolbar = toolbarList[GetToolbar(allButtonsInOrder[index])];
+            //     buttonSizeCacheEditMode[index] = toolbar.elasticElementWidthEditMode;
+            //
+            // }
 
             for (int index = 0; index < toolbarList.Count; ++index)
             {
@@ -263,6 +290,8 @@ namespace CustomUI.Utility
                     allButtonsSize += buttonSizeCache[buttonIndex];
                 }
                 buttonSizeCache[lastIndex] += UI.screenWidth - allButtonsSize;
+
+                // Do the same, but for EditMode
             }
 
             int minOrder = 0;

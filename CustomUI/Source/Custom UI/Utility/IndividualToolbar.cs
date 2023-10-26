@@ -12,10 +12,13 @@ namespace CustomUI.Utility
     {
         public float fixedWidth = 0f;
         public int elasticElements = 0;
-        public Rect inRect;
         public int elasticElementWidth = 0;
-        //private Rect inRect = new Rect(0f, UI.screenHeight - Height, Width, Height);
+        public Rect inRect;
         public List<int> buttonsIndex = new List<int>();
+
+        // public float fixedWidthEditMode = 0f;
+        // public int elasticElementsEditMode = 0;
+        // public int elasticElementWidthEditMode = 0;
 
         public IndividualToolbar(Rect rect)
         {
