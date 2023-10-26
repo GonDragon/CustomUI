@@ -21,11 +21,10 @@ namespace CustomUI.Utility
         private static readonly List<MainButtonDef> allButtonsInOrder;
         private static readonly DragManager<MainButtonDef> manager;
         private static readonly List<int> buttonSizeCache;
+        private static readonly List<int> buttonSizeCacheEditMode;
         private static int lastIndex = 0;
 
         //TODO - Convertir en lista de structs, para múltiples barras.
-        private static float fixedWidth = 0f;
-        private static int elasticElements = 0;
         private static Rect inRect = new Rect(0f, UI.screenHeight - Height, Width, Height);
 
         private static readonly List<IndividualToolbar> toolbarList;
@@ -35,6 +34,7 @@ namespace CustomUI.Utility
             allButtonsInOrder = (List<MainButtonDef>)AccessTools.Field(typeof(MainButtonsRoot), "allButtonsInOrder").GetValue(Find.MainButtonsRoot);
             manager = new DragManager<MainButtonDef>((button, topLeft, width) => button.Worker.DoButton(new Rect(topLeft, new Vector2(width, Height))));
             buttonSizeCache = new List<int>();
+            buttonSizeCacheEditMode = new List<int>();
             toolbarList = new List<IndividualToolbar>();
 
             IndividualToolbar bottomBar = new IndividualToolbar(new Rect(0f, UI.screenHeight - Height, Width, Height));
@@ -113,7 +113,7 @@ namespace CustomUI.Utility
                     Settings.toolbarDefnames.Add(button.defName);
                     Settings.toolbarValues.Add(0);
                 }
-                int toolbar = Settings.toolbarValues[Settings.toolbarDefnames.IndexOf(button.defName)];
+                int toolbar = GetToolbar(button);
 
                 if (!button.Worker.Visible) continue;
 
@@ -164,7 +164,7 @@ namespace CustomUI.Utility
             //* Edit Mode ONLY - Just Once *//
             if (manager.DraggingNow)
             {
-                int toolbar = Settings.toolbarValues[Settings.toolbarDefnames.IndexOf(manager.Dragging.element.defName)];
+                int toolbar = GetToolbar(manager.Dragging.element);
 
                 if (shouldDrawAtEnd)
                 {
@@ -202,12 +202,22 @@ namespace CustomUI.Utility
         {
             allButtonsInOrder.SortBy(x => x.order);
             List<int> indexElasticWidth = new List<int>();
+            List<int> indexElasticWidthEditMode = new List<int>();
+
             buttonSizeCache.Clear();
-            elasticElements = 0;
-            fixedWidth = 0;
+            buttonSizeCacheEditMode.Clear();
+            foreach (IndividualToolbar toolbar in toolbarList)
+            {
+                toolbar.buttonsIndex.Clear();
+                toolbar.elasticElements = 0;
+                toolbar.fixedWidth = 0;
+            }
 
             for (int index = 0; index < allButtonsInOrder.Count; ++index)
             {
+                IndividualToolbar toolbar = toolbarList[GetToolbar(allButtonsInOrder[index])];
+                toolbar.buttonsIndex.Add(index);
+
                 if (!allButtonsInOrder[index].Worker.Visible)
                 {
                     buttonSizeCache.Add(0);
@@ -218,13 +228,13 @@ namespace CustomUI.Utility
                 if (!allButtonsInOrder[index].minimized)
                 {
                     buttonSizeCache.Add(-1);
-                    indexElasticWidth.Add(index);
-                    elasticElements++;
+                    indexElasticWidth.Add(index);                    
+                    toolbar.elasticElements++;
                 }
                 else
                 {
                     buttonSizeCache.Add(minimizedWidth);
-                    fixedWidth += minimizedWidth;
+                    toolbar.fixedWidth += minimizedWidth;
                 }
             }
 
@@ -236,12 +246,17 @@ namespace CustomUI.Utility
             //    else fixedWidth += minimizedWidth;
             //}
 
-            int elasticSpaceAvaible = (int)(Width - fixedWidth);
-            int elasticElementWidth = elasticSpaceAvaible / elasticElements;
+            foreach (IndividualToolbar toolbar in toolbarList)
+            {
+                int elasticSpaceAvaible = (int)(Width - toolbar.fixedWidth);
+                toolbar.elasticElementWidth = toolbar.elasticElements > 0 ? elasticSpaceAvaible / toolbar.elasticElements : 0;
+            }
+
 
             foreach (int index in indexElasticWidth)
             {
-                buttonSizeCache[index] = elasticElementWidth;
+                IndividualToolbar toolbar = toolbarList[GetToolbar(allButtonsInOrder[index])];
+                buttonSizeCache[index] = toolbar.elasticElementWidth;
             }
 
             lastIndex = allButtonsInOrder.FindLastIndex((Predicate<MainButtonDef>)(x => x.Worker.Visible));
@@ -258,6 +273,12 @@ namespace CustomUI.Utility
             });
 
             Persist();
+        }
+
+        public static int GetToolbar(MainButtonDef buttonDef)
+        {
+            int index = Settings.toolbarDefnames.IndexOf(buttonDef.defName);
+            return Settings.toolbarValues[index];
         }
 
         public static void DrawWithConfigIcon(MainButtonDef button, Rect space)
