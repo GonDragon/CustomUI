@@ -199,6 +199,7 @@ namespace CustomUI.Utility
             }
         }
 
+        // This function is awfull, a lot of repeated code. I need to rethink the whole thing.
         public static void OnChange()
         {
             allButtonsInOrder.SortBy(x => x.order);
@@ -222,15 +223,18 @@ namespace CustomUI.Utility
                 if (!allButtonsInOrder[index].Worker.Visible)
                 {
                     buttonSizeCache.Add(0);
-                    // If !allButtonsInOrder[index].minimized => {
-                    // buttonSizeCacheEditMode.Add(-1);
-                    // indexElasticWidthEditMode.add(index);
-                    // toolbar.elasticElementsEditMode++;
-                    // }
-                    // Else => { 
-                    // buttonSizeCacheEditMode.Add(minimizedWidth);
-                    // toolbar.fixedWidthEditMode += minimizedWidth;
-                    //}
+                    if (!allButtonsInOrder[index].minimized)
+                    {
+                        buttonSizeCacheEditMode.Add(-1);
+                        indexElasticWidthEditMode.Add(index);
+                        toolbar.elasticElementsEditMode++;
+                    }
+                    else
+                    {
+                        buttonSizeCacheEditMode.Add(minimizedWidth);
+                        toolbar.fixedWidthEditMode += minimizedWidth;
+                    }
+
                     continue;
                 }
 
@@ -241,17 +245,17 @@ namespace CustomUI.Utility
                     indexElasticWidth.Add(index);                    
                     toolbar.elasticElements++;
 
-                    // buttonSizeCacheEditMode.Add(-1);
-                    // indexElasticWidthEditMode.add(index);
-                    // toolbar.elasticElementsEditMode++;
+                    buttonSizeCacheEditMode.Add(-1);
+                    indexElasticWidthEditMode.Add(index);
+                    toolbar.elasticElementsEditMode++;
                 }
                 else
                 {
                     buttonSizeCache.Add(minimizedWidth);
                     toolbar.fixedWidth += minimizedWidth;
 
-                    // buttonSizeCacheEditMode.Add(minimizedWidth);
-                    // toolbar.fixedWidthEditMode += minimizedWidth;
+                    buttonSizeCacheEditMode.Add(minimizedWidth);
+                    toolbar.fixedWidthEditMode += minimizedWidth;
                 }
             }
 
@@ -260,8 +264,8 @@ namespace CustomUI.Utility
                 int elasticSpaceAvaible = (int)(Width - toolbar.fixedWidth);
                 toolbar.elasticElementWidth = toolbar.elasticElements > 0 ? elasticSpaceAvaible / toolbar.elasticElements : 0;
 
-                // elasticSpaceAvaible = (int)(Width - toolbar.fixedWidthEditMode);
-                // toolbar.elasticElementWidthEditMode = toolbar.elasticElementsEditMode > 0 ? elasticSpaceAvaible / toolbar.elasticElementsEditMode : 0;
+                elasticSpaceAvaible = (int)(Width - toolbar.fixedWidthEditMode);
+                toolbar.elasticElementWidthEditMode = toolbar.elasticElementsEditMode > 0 ? elasticSpaceAvaible / toolbar.elasticElementsEditMode : 0;
             }
 
 
@@ -272,26 +276,30 @@ namespace CustomUI.Utility
 
             }
 
-            // foreach (int index in indexElasticWidthEditMode)
-            // {
-            //     IndividualToolbar toolbar = toolbarList[GetToolbar(allButtonsInOrder[index])];
-            //     buttonSizeCacheEditMode[index] = toolbar.elasticElementWidthEditMode;
-            //
-            // }
+            foreach (int index in indexElasticWidthEditMode)
+            {
+                IndividualToolbar toolbar = toolbarList[GetToolbar(allButtonsInOrder[index])];
+                buttonSizeCacheEditMode[index] = toolbar.elasticElementWidthEditMode;
+            }
 
             for (int index = 0; index < toolbarList.Count; ++index)
             {
                 int lastIndex = allButtonsInOrder.FindLastIndex((Predicate<MainButtonDef>)(x => x.Worker.Visible && (GetToolbar(x) == index)));
-                if (lastIndex < 0) continue;
+                int lastIndexEditMode = allButtonsInOrder.FindLastIndex((Predicate<MainButtonDef>)(x => (GetToolbar(x) == index)));
 
                 int allButtonsSize = 0;
-                foreach(int buttonIndex in toolbarList[index].buttonsIndex)
+                int allButtonsSizeEditMode = 0;
+                if (lastIndex < 0 && lastIndexEditMode < 0) continue;
+                    
+                foreach (int buttonIndex in toolbarList[index].buttonsIndex)
                 {
                     allButtonsSize += buttonSizeCache[buttonIndex];
+                    allButtonsSizeEditMode += buttonSizeCacheEditMode[buttonIndex];
                 }
-                buttonSizeCache[lastIndex] += UI.screenWidth - allButtonsSize;
 
-                // Do the same, but for EditMode
+                buttonSizeCache[lastIndex] += UI.screenWidth - allButtonsSize;
+                buttonSizeCacheEditMode[lastIndexEditMode] += UI.screenWidth - allButtonsSizeEditMode;
+
             }
 
             int minOrder = 0;
@@ -339,7 +347,7 @@ namespace CustomUI.Utility
                     if (proxy.defName == buttonDef.defName)
                     {
                         proxy.visible = buttonDef.buttonVisible;
-                        proxy.toolbar = 0; // TODO - Multiple Toolbars
+                        proxy.toolbar = GetToolbar(buttonDef);
                         proxy.order = buttonDef.order;
                         proxy.minimized = buttonDef.minimized;
                         proxy.iconPath = buttonDef.iconPath;
@@ -365,10 +373,6 @@ namespace CustomUI.Utility
 
         public static void Sync()
         {
-            //
-            MainIconDef testIconDef = DefDatabase<MainIconDef>.AllDefs.First();
-            //
-
             if (Settings.mainButtonProxies == null)
             {
                 Settings.mainButtonProxies = new List<MainButtonProxy>();
@@ -384,8 +388,6 @@ namespace CustomUI.Utility
                         buttonDef.minimized = proxy.minimized;
                         buttonDef.iconPath = proxy.iconPath;
                         Traverse.Create(buttonDef).Field("icon").SetValue(null);
-
-                        // TODO - multiple toolbars
                     }
                 }
             }

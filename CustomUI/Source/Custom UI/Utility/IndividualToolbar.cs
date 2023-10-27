@@ -16,9 +16,9 @@ namespace CustomUI.Utility
         public Rect inRect;
         public List<int> buttonsIndex = new List<int>();
 
-        // public float fixedWidthEditMode = 0f;
-        // public int elasticElementsEditMode = 0;
-        // public int elasticElementWidthEditMode = 0;
+        public float fixedWidthEditMode = 0f;
+        public int elasticElementsEditMode = 0;
+        public int elasticElementWidthEditMode = 0;
 
         public IndividualToolbar(Rect rect)
         {
