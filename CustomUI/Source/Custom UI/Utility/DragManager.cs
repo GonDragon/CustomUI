@@ -56,12 +56,12 @@ namespace CustomUI.Utility
             return false;
         }
 
-        public void DropLocation(Rect rect, Action<T> onOver, Func<DragElement<T>, bool> onDrop)
+        public void DropLocation(Rect rect, Action<T> onOver, Func<DragElement<T>, int, bool> onDrop, int toolbar)
         {
             if (Mouse.IsOver(rect) && Dragging.element != null)
             {
                 onOver?.Invoke(Dragging.element);
-                if (!Input.GetMouseButton(0) && onDrop(Dragging))
+                if (!Input.GetMouseButton(0) && onDrop(Dragging, toolbar))
                 {
                     dragOffset = Vector2.zero;
                     Dragging = default;

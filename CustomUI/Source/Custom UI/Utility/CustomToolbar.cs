@@ -24,9 +24,6 @@ namespace CustomUI.Utility
         private static readonly List<int> buttonSizeCacheEditMode;
         private static int lastIndex = 0;
 
-        //TODO - Convertir en lista de structs, para múltiples barras.
-        private static Rect inRect = new Rect(0f, UI.screenHeight - Height, Width, Height);
-
         private static readonly List<IndividualToolbar> toolbarList;
 
         static CustomToolbar()
@@ -38,7 +35,7 @@ namespace CustomUI.Utility
             toolbarList = new List<IndividualToolbar>();
 
             IndividualToolbar bottomBar = new IndividualToolbar(new Rect(0f, UI.screenHeight - Height, Width, Height));
-            IndividualToolbar topBar = new IndividualToolbar(new Rect(0f, Height, Width, Height));
+            IndividualToolbar topBar = new IndividualToolbar(new Rect(0f, 0f, Width, Height));
 
             toolbarList.Add(bottomBar);
             toolbarList.Add(topBar);
@@ -116,14 +113,14 @@ namespace CustomUI.Utility
                 }
                 int toolbar = GetToolbar(button);
 
-                if (!button.Worker.Visible) continue;
+                //if (!button.Worker.Visible) continue;
 
-                Rect buttonRect = new Rect(curX[toolbar], (UI.screenHeight - Height), buttonSizeCache[index], Height);
+                Rect buttonRect = new Rect(curX[toolbar], toolbarList[toolbar].inRect.y, buttonSizeCacheEditMode[index], Height);
 
                 //* Edit Mode ONLY - Once per Button *//
 
                 bool mouseOverButton = Mouse.IsOver(buttonRect);
-                bool mouseOverBar = Mouse.IsOver(inRect);
+                bool mouseOverBar = IsMouseOverBar();
 
                 if (manager.DraggingNow)
                 {
@@ -150,33 +147,27 @@ namespace CustomUI.Utility
                     }
                 }
 
-                if (mouseOverButton && Input.GetMouseButtonDown(1))
-                {
-                    CustomUI.Log("Edit");
-                    Event.current.Use();
-                }
                 if (manager.TryStartDrag(button, buttonRect, index)) CustomUI.Log("TryDrag");
 
                 DrawWithConfigIcon(button, buttonRect);
 
-                curX[toolbar] += buttonSizeCache[index];
+                curX[toolbar] += buttonSizeCacheEditMode[index];
             }
 
             //* Edit Mode ONLY - Just Once *//
             if (manager.DraggingNow)
             {
-                int toolbar = GetToolbar(manager.Dragging.element);
+                int originDraggingToolbar = GetToolbar(manager.Dragging.element);
 
                 if (shouldDrawAtEnd)
                 {
-                    Rect draggedRect = new Rect(curX[toolbar], (UI.screenHeight - Height), manager.Dragging.width, Height);
+                    Rect draggedRect = new Rect(curX[originDraggingToolbar], (UI.screenHeight - Height), manager.Dragging.width, Height);
                     DrawWithConfigIcon(manager.Dragging.element, draggedRect);
                     replaceIndex = lastIndex;
                     isLastIndex = true;
                 }
 
-                manager.DropLocation(inRect, null, dragButton =>
-                {
+                Func<DragElement<MainButtonDef>, int, bool> onDropFunction = (dragButton, toolbar) => {
                     if (replaceIndex > dragButton.index && !isLastIndex)
                     {
                         replaceIndex--;
@@ -191,12 +182,31 @@ namespace CustomUI.Utility
                         dragButton.element.order = allButtonsInOrder[replaceIndex].order - 1;
                     }
 
+                    SetToolbar(dragButton.element, toolbar);
+
                     OnChange();
                     return true;
-                });
+                };
 
-                manager.DragDropOnGUI((dragButton) => CustomUI.Log($"Stop Drag For {dragButton.defName}"), !Mouse.IsOver(inRect));
+                for (int i = 0; i < toolbarList.Count; i++)
+                {
+                    manager.DropLocation(toolbarList[i].inRect, null, onDropFunction, i);
+                }
+
+                //manager.DragDropOnGUI((dragButton) => CustomUI.Log($"Stop Drag For {dragButton.defName}"), !Mouse.IsOver(inRect));
             }
+        }
+
+        public static bool IsMouseOverBar()
+        {
+            bool isMouseOverBar = false;
+
+            foreach (IndividualToolbar toolbar in toolbarList)
+            {
+                isMouseOverBar = isMouseOverBar || Mouse.IsOver(toolbar.inRect);
+            }
+
+            return isMouseOverBar;
         }
 
         // This function is awfull, a lot of repeated code. I need to rethink the whole thing.
@@ -211,8 +221,12 @@ namespace CustomUI.Utility
             foreach (IndividualToolbar toolbar in toolbarList)
             {
                 toolbar.buttonsIndex.Clear();
+                
                 toolbar.elasticElements = 0;
                 toolbar.fixedWidth = 0;
+
+                toolbar.elasticElementsEditMode = 0;
+                toolbar.fixedWidthEditMode = 0;
             }
 
             for (int index = 0; index < allButtonsInOrder.Count; ++index)
@@ -264,8 +278,8 @@ namespace CustomUI.Utility
                 int elasticSpaceAvaible = (int)(Width - toolbar.fixedWidth);
                 toolbar.elasticElementWidth = toolbar.elasticElements > 0 ? elasticSpaceAvaible / toolbar.elasticElements : 0;
 
-                elasticSpaceAvaible = (int)(Width - toolbar.fixedWidthEditMode);
-                toolbar.elasticElementWidthEditMode = toolbar.elasticElementsEditMode > 0 ? elasticSpaceAvaible / toolbar.elasticElementsEditMode : 0;
+                int elasticSpaceAvaibleEditMode = (int)(Width - toolbar.fixedWidthEditMode);
+                toolbar.elasticElementWidthEditMode = toolbar.elasticElementsEditMode > 0 ? elasticSpaceAvaibleEditMode / toolbar.elasticElementsEditMode : 0;
             }
 
 
@@ -318,6 +332,12 @@ namespace CustomUI.Utility
             return Settings.toolbarValues[index];
         }
 
+        public static void SetToolbar(MainButtonDef buttonDef, int toolbar)
+        {
+            int index = Settings.toolbarDefnames.IndexOf(buttonDef.defName);
+            Settings.toolbarValues[index] = toolbar;
+        }
+
         public static void DrawWithConfigIcon(MainButtonDef button, Rect space)
         {
             if (Widgets.ButtonInvisible(space, false))
@@ -326,7 +346,11 @@ namespace CustomUI.Utility
                 Find.WindowStack.Add(new Windows.EditMainButton_Window(button));
             }
 
+            Color originalColor = GUI.color;
+            if(!button.Worker.Visible) GUI.color = new Color(GUI.color.r, GUI.color.g, GUI.color.b, 0.5f);
             button.Worker.DoButton(space);
+            GUI.color = originalColor;
+
             GUI.BeginGroup(space);
 
             float configSizef = space.height - 8f;
