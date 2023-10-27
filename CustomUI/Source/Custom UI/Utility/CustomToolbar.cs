@@ -80,7 +80,7 @@ namespace CustomUI.Utility
 
                 if (!button.Worker.Visible) continue;
 
-                Rect buttonRect = new Rect(curX[toolbar], (UI.screenHeight - Height), buttonSizeCache[index], Height);
+                Rect buttonRect = new Rect(curX[toolbar], toolbarList[toolbar].inRect.y, buttonSizeCache[index], Height);
 
                 button.Worker.DoButton(buttonRect);
 
