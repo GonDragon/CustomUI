@@ -19,8 +19,8 @@ namespace CustomUI
         public static bool vanillaWeather = true;
         public static bool vanillaTemperature = true;
 
-        public static List<string> toolbarDefnames;
-        public static List<int> toolbarValues;
+        public static List<string> toolbarDefnames = new List<string>();
+        public static List<int> toolbarValues = new List<int>();
 
         public static List<MainButtonProxy> mainButtonProxies = new List<MainButtonProxy>();
 
