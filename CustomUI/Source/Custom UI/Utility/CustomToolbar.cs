@@ -10,9 +10,6 @@ namespace CustomUI.Utility
 {
     public static class CustomToolbar
     {
-        public static float Height => 35f; // PLACEHOLDER => Settings.Height
-        public static float Width => UI.screenWidth;
-
         public static float interGap = 0;
         public static float padding = 2;
         public static float margin = 3;
@@ -26,22 +23,16 @@ namespace CustomUI.Utility
 
         private static readonly List<IndividualToolbar> toolbarList;
 
-        private static bool topBar = false;
-        private static bool bottomBar = true;
-
-        public static bool TabsOnTop => topBar || UIManager.editionModeEnabled;
-        public static bool TabsOnBottom => bottomBar || UIManager.editionModeEnabled;
-
         static CustomToolbar()
         {
             allButtonsInOrder = (List<MainButtonDef>)AccessTools.Field(typeof(MainButtonsRoot), "allButtonsInOrder").GetValue(Find.MainButtonsRoot);
-            manager = new DragManager<MainButtonDef>((button, topLeft, width) => button.Worker.DoButton(new Rect(topLeft, new Vector2(width, Height))));
+            manager = new DragManager<MainButtonDef>((button, topLeft, width) => button.Worker.DoButton(new Rect(topLeft, new Vector2(width, UIManager.Height))));
             buttonSizeCache = new List<int>();
             buttonSizeCacheEditMode = new List<int>();
             toolbarList = new List<IndividualToolbar>();
 
-            IndividualToolbar bottomBar = new IndividualToolbar(new Rect(0f, UI.screenHeight - Height, Width, Height));
-            IndividualToolbar topBar = new IndividualToolbar(new Rect(0f, 0f, Width, Height));
+            IndividualToolbar bottomBar = new IndividualToolbar(new Rect(0f, UI.screenHeight - UIManager.Height, UIManager.Width, UIManager.Height));
+            IndividualToolbar topBar = new IndividualToolbar(new Rect(0f, 0f, UIManager.Width, UIManager.Height));
 
             toolbarList.Add(bottomBar);
             toolbarList.Add(topBar);
@@ -53,6 +44,8 @@ namespace CustomUI.Utility
 
         public static void OnGui()
         {
+            UIManager.CheckForChanges();
+
             if (UIManager.editionModeEnabled)
             {
                 EditMode();
@@ -86,7 +79,7 @@ namespace CustomUI.Utility
 
                 if (!button.Worker.Visible) continue;
 
-                Rect buttonRect = new Rect(curX[toolbar], toolbarList[toolbar].inRect.y, buttonSizeCache[i], Height);
+                Rect buttonRect = new Rect(curX[toolbar], toolbarList[toolbar].inRect.y, buttonSizeCache[i], UIManager.Height);
 
                 button.Worker.DoButton(buttonRect);
 
@@ -121,7 +114,7 @@ namespace CustomUI.Utility
 
                 //if (!button.Worker.Visible) continue;
 
-                Rect buttonRect = new Rect(curX[toolbar], toolbarList[toolbar].inRect.y, buttonSizeCacheEditMode[i], Height);
+                Rect buttonRect = new Rect(curX[toolbar], toolbarList[toolbar].inRect.y, buttonSizeCacheEditMode[i], UIManager.Height);
 
                 //* Edit Mode ONLY - Once per Button *//
 
@@ -167,7 +160,7 @@ namespace CustomUI.Utility
 
                 if (shouldDrawAtEnd)
                 {
-                    Rect draggedRect = new Rect(curX[originDraggingToolbar], (UI.screenHeight - Height), manager.Dragging.width, Height);
+                    Rect draggedRect = new Rect(curX[originDraggingToolbar], (UI.screenHeight - UIManager.Height), manager.Dragging.width, UIManager.Height);
                     DrawWithConfigIcon(manager.Dragging.element, draggedRect);
                     replaceIndex = lastIndex;
                     isLastIndex = true;
@@ -218,8 +211,8 @@ namespace CustomUI.Utility
         // This function is awfull, a lot of repeated code. I need to rethink the whole thing.
         public static void OnChange()
         {
-            topBar = false;
-            bottomBar = false;
+            UIManager.topBar = false;
+            UIManager.bottomBar = false;
 
             allButtonsInOrder.SortBy(x => x.order);
             List<int> indexElasticWidth = new List<int>();
@@ -268,8 +261,8 @@ namespace CustomUI.Utility
                     continue;
                 }
 
-                if (GetToolbar(allButtonsInOrder[i]) == 0) bottomBar = true;
-                else topBar = true;
+                if (GetToolbar(allButtonsInOrder[i]) == 0) UIManager.bottomBar = true;
+                else UIManager.topBar = true;
 
                 // Cambiar para tomar en cuenta ancho fijo
                 if (!allButtonsInOrder[i].minimized)
@@ -294,10 +287,10 @@ namespace CustomUI.Utility
 
             foreach (IndividualToolbar toolbar in toolbarList)
             {
-                int elasticSpaceAvaible = (int)(Width - toolbar.fixedWidth);
+                int elasticSpaceAvaible = (int)(UIManager.Width - toolbar.fixedWidth);
                 toolbar.elasticElementWidth = toolbar.elasticElements > 0 ? elasticSpaceAvaible / toolbar.elasticElements : 0;
 
-                int elasticSpaceAvaibleEditMode = (int)(Width - toolbar.fixedWidthEditMode);
+                int elasticSpaceAvaibleEditMode = (int)(UIManager.Width - toolbar.fixedWidthEditMode);
                 toolbar.elasticElementWidthEditMode = toolbar.elasticElementsEditMode > 0 ? elasticSpaceAvaibleEditMode / toolbar.elasticElementsEditMode : 0;
             }
 
@@ -341,6 +334,7 @@ namespace CustomUI.Utility
                 minOrder += 10;
             });
 
+            Find.ColonistBar.MarkColonistsDirty();
             Persist();
         }
         

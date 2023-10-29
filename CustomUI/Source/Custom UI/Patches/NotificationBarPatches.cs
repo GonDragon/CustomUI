@@ -89,22 +89,20 @@ namespace CustomUI.Patches
     [HarmonyPatch(typeof(GlobalControlsUtility))]
     internal class GlobalControlsUtilityPatches
     {
-        private const float barHeight = 35f;
 
         [HarmonyPrefix]
         [HarmonyPatch(nameof(GlobalControlsUtility.DoPlaySettings)), HarmonyPriority(Priority.Low)]
         private static bool DoPlaySettingsPatch(WidgetRow rowVisibility, bool worldView, ref float curBaseY)
         {
-            //if (Settings.TabsOnBottom) curBaseY -= UIManager.ExtendedBarHeight;
+            if (UIManager.TabsOnBottom) curBaseY -= UIManager.Height;
             //if (Settings.useDesignatorBar && !Settings.designationsOnLeft && !worldView) curBaseY -= 88f;
-            //if (Settings.togglersOnTop) curBaseY += Widget.ExtendedToolbar.Height;
+            if (Settings.togglersOnTop) curBaseY += UIManager.Height;
 
-            curBaseY -= barHeight;
+            //curBaseY -= Utility.CustomToolbar.Height;
 
-            if (Settings.togglersOnTop) curBaseY += barHeight;
             float borderGap = 4f;
-            //float initialY = Settings.togglersOnTop ? (Settings.TabsOnTop ? UIManager.ExtendedBarHeight + borderGap : borderGap) : curBaseY;
-            float initialY = Settings.togglersOnTop ? borderGap : curBaseY;
+            float initialY = Settings.togglersOnTop ? (UIManager.TabsOnTop ? UIManager.Height + borderGap : borderGap) : curBaseY;
+            //float initialY = Settings.togglersOnTop ? borderGap : curBaseY;
             rowVisibility.Init((float)UI.screenWidth - borderGap, initialY, Settings.togglersOnTop ? UIDirection.LeftThenDown : UIDirection.LeftThenUp, Settings.togglersOnTop ? 250f : 180f);
             Find.PlaySettings.DoPlaySettingsGlobalControls(rowVisibility, worldView);
             if (!Settings.togglersOnTop) curBaseY = rowVisibility.FinalY;

@@ -9,11 +9,30 @@ namespace CustomUI
     {
 
         public static Utility.MainButtonRenderMode mainButtonMode => Utility.MainButtonRenderMode.IconsAndText;
-        public static bool editionModeEnabled = false;
 
-        //public static float ExtendedBarHeight => ExtendedToolbar.Height;
-        //public static float ExtendedBarWidth => ExtendedToolbar.Width;
+        public static float Height => 35f; // PLACEHOLDER => Settings.Height
+        public static float Width => UI.screenWidth;
+
+        public static bool topBar = false;
+        public static bool bottomBar = true;
+
+        public static bool editionModeEnabled = false;
+        public static bool previousMode = false;
+
+        public static bool TabsOnTop => topBar || editionModeEnabled;
+        public static bool TabsOnBottom => bottomBar || editionModeEnabled;
+
+        public static void CheckForChanges()
+        {
+            if (editionModeEnabled != previousMode)
+            {
+                previousMode = editionModeEnabled;
+                Find.ColonistBar.MarkColonistsDirty();
+            }
+        }
         //public static float ResourceGap => (Settings.vanillaAnimals ? (Settings.TabsOnTop ? ExtendedToolbar.Height : 0f) : animalsRow.FinalY + 26f);
+        public static float ResourceGap => (TabsOnTop ? Height : 0f);
+
 
         //private static bool tabsOnTop = Settings.TabsOnTop;
 

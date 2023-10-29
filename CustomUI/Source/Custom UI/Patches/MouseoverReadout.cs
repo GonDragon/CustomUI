@@ -19,7 +19,7 @@ namespace CustomUI.Patches
             }
             __state = true;
 
-            float deltaH = Utility.CustomToolbar.TabsOnBottom ? 0 : barHeight;
+            float deltaH = UIManager.TabsOnBottom ? 0 : barHeight;
 
             GUI.BeginGroup(new Rect(0f, 0f + deltaH, UI.screenWidth, UI.screenHeight - deltaH));
             //GUI.BeginGroup(new Rect(0f, 0f, UI.screenWidth, UI.screenHeight));

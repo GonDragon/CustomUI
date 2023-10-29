@@ -93,7 +93,7 @@ namespace CustomUI.Patches
 
         public static void MoveIfTimer(float dollyRateScreenEdge, ref Vector2 vector2, ref float mouseTouchingScreenBottomEdgeStartTime)
         {
-            if (!Utility.CustomToolbar.TabsOnTop)
+            if (!UIManager.TabsOnTop)
             {
                 vector2.y += dollyRateScreenEdge;
                 return;
@@ -194,7 +194,7 @@ namespace CustomUI.Patches
 
         public static void MoveIfTimer(float dollyRateScreenEdge, ref Vector2 zero, ref float mouseTouchingScreenBottomEdgeStartTime)
         {
-            if (!Utility.CustomToolbar.TabsOnTop)
+            if (!UIManager.TabsOnTop)
             {
                 zero.y += dollyRateScreenEdge;
                 return;
