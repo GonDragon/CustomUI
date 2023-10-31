@@ -69,11 +69,6 @@ namespace CustomUI.Utility
             {
                 MainButtonDef button = allButtonsInOrder[i];
 
-                //if (!Settings.toolbarDefnames.Contains(button.defName))
-                //{
-                //    Settings.toolbarDefnames.Add(button.defName);
-                //    Settings.toolbarValues.Add(0);
-                //}
                 int toolbar = Settings.toolbarValues[Settings.toolbarDefnames.IndexOf(button.defName)];
 
                 if (!button.Worker.Visible) continue;
@@ -88,6 +83,11 @@ namespace CustomUI.Utility
 
         public static void EditMode()
         {
+            foreach(IndividualToolbar toolbar in toolbarList)
+            {
+                DrawTransparentRect(toolbar.inRect, 0.3f);
+            }
+
             GUI.color = Color.white;
 
             List<int> curX = new List<int>();
@@ -344,5 +344,14 @@ namespace CustomUI.Utility
                 }
             }
         }
+
+        private static void DrawTransparentRect(Rect rect, float opacity)
+        {
+            Color prevColor = GUI.color;
+            GUI.color = new Color(0.3f, 0.3f, 0.3f, opacity);
+            GUI.DrawTexture(rect, Texture2D.whiteTexture);
+            GUI.color = prevColor;
+        }
+
     }
 }
