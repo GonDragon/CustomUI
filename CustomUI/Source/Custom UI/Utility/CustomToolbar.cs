@@ -13,7 +13,6 @@ namespace CustomUI.Utility
         public static float interGap = 0;
         public static float padding = 2;
         public static float margin = 3;
-        private const int minimizedWidth = 70;
 
         private static readonly List<MainButtonDef> allButtonsInOrder;
         private static readonly DragManager<MainButtonDef> manager;
@@ -208,27 +207,16 @@ namespace CustomUI.Utility
             return isMouseOverBar;
         }
 
-        // This function is awfull, a lot of repeated code. I need to rethink the whole thing.
         public static void OnChange()
         {
-            UIManager.topBar = false;
-            UIManager.bottomBar = false;
-
             allButtonsInOrder.SortBy(x => x.order);
-            List<int> indexElasticWidth = new List<int>();
-            List<int> indexElasticWidthEditMode = new List<int>();
 
             buttonSizeCache.Clear();
             buttonSizeCacheEditMode.Clear();
+
             foreach (IndividualToolbar toolbar in toolbarList)
             {
-                toolbar.buttonsIndex.Clear();
-                
-                toolbar.elasticElements = 0;
-                toolbar.fixedWidth = 0;
-
-                toolbar.elasticElementsEditMode = 0;
-                toolbar.fixedWidthEditMode = 0;
+                toolbar.Initialize();
             }
 
             for (int i = 0; i < allButtonsInOrder.Count; ++i)
@@ -241,97 +229,25 @@ namespace CustomUI.Utility
                 }
 
                 IndividualToolbar toolbar = toolbarList[GetToolbar(allButtonsInOrder[i])];
-                toolbar.buttonsIndex.Add(i);
 
-                if (!allButtonsInOrder[i].Worker.Visible)
-                {
-                    buttonSizeCache.Add(0);
-                    if (!allButtonsInOrder[i].minimized)
-                    {
-                        buttonSizeCacheEditMode.Add(-1);
-                        indexElasticWidthEditMode.Add(i);
-                        toolbar.elasticElementsEditMode++;
-                    }
-                    else
-                    {
-                        buttonSizeCacheEditMode.Add(minimizedWidth);
-                        toolbar.fixedWidthEditMode += minimizedWidth;
-                    }
-
-                    continue;
-                }
-
-                if (GetToolbar(allButtonsInOrder[i]) == 0) UIManager.bottomBar = true;
-                else UIManager.topBar = true;
-
-                // Cambiar para tomar en cuenta ancho fijo
-                if (!allButtonsInOrder[i].minimized)
-                {
-                    buttonSizeCache.Add(-1);
-                    indexElasticWidth.Add(i);                    
-                    toolbar.elasticElements++;
-
-                    buttonSizeCacheEditMode.Add(-1);
-                    indexElasticWidthEditMode.Add(i);
-                    toolbar.elasticElementsEditMode++;
-                }
-                else
-                {
-                    buttonSizeCache.Add(minimizedWidth);
-                    toolbar.fixedWidth += minimizedWidth;
-
-                    buttonSizeCacheEditMode.Add(minimizedWidth);
-                    toolbar.fixedWidthEditMode += minimizedWidth;
-                }
+                toolbar.AddButton(allButtonsInOrder[i], i);
+                buttonSizeCache.Add(0);
+                buttonSizeCacheEditMode.Add(0);
             }
 
             foreach (IndividualToolbar toolbar in toolbarList)
             {
-                int elasticSpaceAvaible = (int)(UIManager.Width - toolbar.fixedWidth);
-                toolbar.elasticElementWidth = toolbar.elasticElements > 0 ? elasticSpaceAvaible / toolbar.elasticElements : 0;
-
-                int elasticSpaceAvaibleEditMode = (int)(UIManager.Width - toolbar.fixedWidthEditMode);
-                toolbar.elasticElementWidthEditMode = toolbar.elasticElementsEditMode > 0 ? elasticSpaceAvaibleEditMode / toolbar.elasticElementsEditMode : 0;
+                toolbar.GetSizes(buttonSizeCache, buttonSizeCacheEditMode);
             }
 
-            foreach (int indexElastic in indexElasticWidth)
-            {
-                IndividualToolbar toolbar = toolbarList[GetToolbar(allButtonsInOrder[indexElastic])];
-                buttonSizeCache[indexElastic] = toolbar.elasticElementWidth;
+            UIManager.bottomBar = !toolbarList[0].empty;
+            UIManager.topBar = !toolbarList[1].empty;
 
-            }
-
-            foreach (int indexElasticEditMode in indexElasticWidthEditMode)
-            {
-                IndividualToolbar toolbar = toolbarList[GetToolbar(allButtonsInOrder[indexElasticEditMode])];
-                buttonSizeCacheEditMode[indexElasticEditMode] = toolbar.elasticElementWidthEditMode;
-            }
-
-            for (int i = 0; i < toolbarList.Count; ++i)
-            {
-                int lastIndex = allButtonsInOrder.FindLastIndex((Predicate<MainButtonDef>)(x => x.Worker.Visible && (GetToolbar(x) == i)));
-                int lastIndexEditMode = allButtonsInOrder.FindLastIndex((Predicate<MainButtonDef>)(x => (GetToolbar(x) == i)));
-
-                int allButtonsSize = 0;
-                int allButtonsSizeEditMode = 0;
-                if (lastIndex < 0 && lastIndexEditMode < 0) continue;
-
-                foreach (int buttonIndex in toolbarList[i].buttonsIndex)
-                {
-                    allButtonsSize += buttonSizeCache[buttonIndex];
-                    allButtonsSizeEditMode += buttonSizeCacheEditMode[buttonIndex];
-                }
-
-                if(lastIndex >= 0) buttonSizeCache[lastIndex] += UI.screenWidth - allButtonsSize;
-                if (lastIndexEditMode >= 0) buttonSizeCacheEditMode[lastIndexEditMode] += UI.screenWidth - allButtonsSizeEditMode;
-
-            }
-
-            int minOrder = 0;
+            int order = 0;
             allButtonsInOrder.Do((button) =>
             {
-                button.order = minOrder;
-                minOrder += 10;
+                button.order = order;
+                order += 10;
             });
 
             Find.ColonistBar.MarkColonistsDirty();
