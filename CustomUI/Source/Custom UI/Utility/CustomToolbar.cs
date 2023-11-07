@@ -69,7 +69,7 @@ namespace CustomUI.Utility
             {
                 MainButtonDef button = allButtonsInOrder[i];
 
-                int toolbar = Settings.toolbarValues[Settings.toolbarDefnames.IndexOf(button.defName)];
+                int toolbar = Settings.buttonManager.GetToolbar(button.defName);
 
                 if (!button.Worker.Visible) continue;
 
@@ -104,12 +104,12 @@ namespace CustomUI.Utility
             {
                 MainButtonDef button = allButtonsInOrder[i];
 
-                if (!Settings.toolbarDefnames.Contains(button.defName))
-                {
-                    Settings.toolbarDefnames.Add(button.defName);
-                    Settings.toolbarValues.Add(0);
-                }
-                int toolbar = GetToolbar(button);
+                //if (!Settings.toolbarDefnames.Contains(button.defName))
+                //{
+                //    Settings.toolbarDefnames.Add(button.defName);
+                //    Settings.toolbarValues.Add(0);
+                //}
+                int toolbar = Settings.buttonManager.GetToolbar(button.defName);
 
                 //if (!button.Worker.Visible) continue;
 
@@ -155,7 +155,7 @@ namespace CustomUI.Utility
             //* Edit Mode ONLY - Just Once *//
             if (manager.DraggingNow)
             {
-                int originDraggingToolbar = GetToolbar(manager.Dragging.element);
+                int originDraggingToolbar = Settings.buttonManager.GetToolbar(manager.Dragging.element.defName);
 
                 if (shouldDrawAtEnd)
                 {
@@ -180,7 +180,7 @@ namespace CustomUI.Utility
                         dragButton.element.order = allButtonsInOrder[replaceIndex].order - 1;
                     }
 
-                    SetToolbar(dragButton.element, toolbar);
+                    Settings.buttonManager.SetToolbar(dragButton.element.defName, toolbar);
 
                     OnChange();
                     return true;
@@ -221,14 +221,11 @@ namespace CustomUI.Utility
 
             for (int i = 0; i < allButtonsInOrder.Count; ++i)
             {
+                string defName = allButtonsInOrder[i].defName;
 
-                if (!Settings.toolbarDefnames.Contains(allButtonsInOrder[i].defName))
-                {
-                    Settings.toolbarDefnames.Add(allButtonsInOrder[i].defName);
-                    Settings.toolbarValues.Add(0);
-                }
+                if (!Settings.buttonManager.DefExist(defName)) Settings.buttonManager.AddDef(defName);
 
-                IndividualToolbar toolbar = toolbarList[GetToolbar(allButtonsInOrder[i])];
+                IndividualToolbar toolbar = toolbarList[Settings.buttonManager.GetToolbar(defName)];
 
                 toolbar.AddButton(allButtonsInOrder[i], i);
                 buttonSizeCache.Add(0);
@@ -252,18 +249,6 @@ namespace CustomUI.Utility
 
             Find.ColonistBar.MarkColonistsDirty();
             Persist();
-        }
-        
-        public static int GetToolbar(MainButtonDef buttonDef)
-        {
-            int toolbarIndexGet = Settings.toolbarDefnames.IndexOf(buttonDef.defName);
-            return Settings.toolbarValues[toolbarIndexGet];
-        }
-
-        public static void SetToolbar(MainButtonDef buttonDef, int toolbar)
-        {
-            int toolbarIndexSet = Settings.toolbarDefnames.IndexOf(buttonDef.defName);
-            Settings.toolbarValues[toolbarIndexSet] = toolbar;
         }
 
         public static void DrawWithConfigIcon(MainButtonDef button, Rect space)
@@ -299,7 +284,7 @@ namespace CustomUI.Utility
                     if (proxy.defName == buttonDef.defName)
                     {
                         proxy.visible = buttonDef.buttonVisible;
-                        proxy.toolbar = GetToolbar(buttonDef);
+                        proxy.toolbar = Settings.buttonManager.GetToolbar(buttonDef.defName);
                         proxy.order = buttonDef.order;
                         proxy.minimized = buttonDef.minimized;
                         proxy.iconPath = buttonDef.iconPath;

@@ -102,6 +102,7 @@
     <Compile Include="Textures.cs" />
     <Compile Include="UIManager.cs" />
     <Compile Include="Utility\ButtonConfig.cs" />
+    <Compile Include="Utility\ButtonManager.cs" />
     <Compile Include="Utility\CustomToolbar.cs" />
     <Compile Include="Utility\DragManager.cs" />
     <Compile Include="Utility\Helper.cs" />

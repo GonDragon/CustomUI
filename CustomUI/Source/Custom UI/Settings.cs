@@ -19,8 +19,7 @@ namespace CustomUI
         public static bool vanillaWeather = true;
         public static bool vanillaTemperature = true;
 
-        public static List<string> toolbarDefnames = new List<string>();
-        public static List<int> toolbarValues = new List<int>();
+        public static ButtonManager buttonManager = new ButtonManager();
 
         public static List<MainButtonProxy> mainButtonProxies = new List<MainButtonProxy>();
 
@@ -35,8 +34,7 @@ namespace CustomUI
             Scribe_Values.Look(ref vanillaWeather, "vanillaWeather", false);
             Scribe_Values.Look(ref vanillaTemperature, "vanillaTemperature", false);
 
-            Scribe_Collections.Look(ref toolbarDefnames, "toolbarDefnames", LookMode.Value);
-            Scribe_Collections.Look(ref toolbarValues, "toolbarValues", LookMode.Value);
+            Scribe_Deep.Look(ref buttonManager, "buttonManager");
 
             Scribe_Collections.Look(ref mainButtonProxies, "buttons" ,LookMode.Deep);
 

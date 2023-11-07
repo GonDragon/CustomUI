@@ -70,33 +70,50 @@ namespace CustomUI.Utility
             {
                 if (!button.Worker.Visible)
                 {
-                    if (!button.minimized)
-                    {
-                        elasticElementsEditMode++;
-                        buttonSizesEditMode.Add(-1);
-                    } else
+                    if (button.minimized)
                     {
                         fixedWidthEditMode += minimizedWidth;
                         buttonSizesEditMode.Add(minimizedWidth);
+                    }
+                    else if (Settings.buttonManager.HasFixedSize(button.defName))
+                    {
+                        int fixedSize = Settings.buttonManager.GetFixedSize(button.defName);
+                        fixedWidthEditMode += fixedSize;
+                        buttonSizesEditMode.Add(fixedSize);
+                    }
+                    else
+                    {
+                        elasticElementsEditMode++;
+                        buttonSizesEditMode.Add(-1);
                     }
 
                     buttonSizes.Add(0);
                 }
                 else
                 {
-                    if (!button.minimized)
-                    {
-                        elasticElements++;
-                        elasticElementsEditMode++;
-                        buttonSizes.Add(-1);
-                        buttonSizesEditMode.Add(-1);
-                    }
-                    else
+                    if (button.minimized)
                     {
                         fixedWidth += minimizedWidth;
                         fixedWidthEditMode += minimizedWidth;
                         buttonSizes.Add(minimizedWidth);
                         buttonSizesEditMode.Add(minimizedWidth);
+                    }
+                    else if (Settings.buttonManager.HasFixedSize(button.defName))
+                    {
+                        int fixedSize = Settings.buttonManager.GetFixedSize(button.defName);
+
+                        fixedWidth += fixedSize;
+                        fixedWidthEditMode += fixedSize;
+
+                        buttonSizes.Add(fixedSize);
+                        buttonSizesEditMode.Add(fixedSize);
+                    }
+                    else
+                    {
+                        elasticElements++;
+                        elasticElementsEditMode++;
+                        buttonSizes.Add(-1);
+                        buttonSizesEditMode.Add(-1);
                     }
                 }
             }
