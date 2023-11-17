@@ -40,6 +40,9 @@ namespace CustomUI.Windows
         private static readonly Dictionary<string, Texture2D> cacheIcons = new Dictionary<string, Texture2D>();
         private static List<string> cacheIconsPath;
 
+        private bool isFixedSize = false;
+        private float placeholderFixedSize = -1f;
+
         public override Vector2 InitialSize => new Vector2(350f, 600f);
         public new bool doCloseX = false;
 
@@ -95,6 +98,19 @@ namespace CustomUI.Windows
 
             Rect hidelabelRect = new Rect(inRect.x, curY, width * 2 - Widgets.CheckboxSize - 11f, EditMainButton_Window.EditFieldHeight);
             Widgets.CheckboxLabeled(hidelabelRect, "Visible", ref buttonDef.buttonVisible);
+
+            curY += (EditMainButton_Window.EditFieldHeight + 10f);
+
+            Rect fixedSizeRect = new Rect(inRect.x, curY, width * 2 - Widgets.CheckboxSize - 11f, EditMainButton_Window.EditFieldHeight);
+            Widgets.CheckboxLabeled(fixedSizeRect, "Fixed Size", ref isFixedSize);
+            if (isFixedSize)
+            {
+                curY += (EditMainButton_Window.EditFieldHeight + 10f);
+
+                Rect fixedSizeSliderRect = new Rect(inRect.x, curY, width * 2 - Widgets.CheckboxSize - 11f, EditMainButton_Window.EditFieldHeight);
+                Widgets.HorizontalSlider(fixedSizeSliderRect, ref placeholderFixedSize, new FloatRange(50f, 300f), "Size", 1f);
+
+            }
 
             curY += (EditMainButton_Window.EditFieldHeight + 10f);
 
