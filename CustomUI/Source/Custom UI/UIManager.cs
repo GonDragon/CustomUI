@@ -30,33 +30,11 @@ namespace CustomUI
                 Find.ColonistBar.MarkColonistsDirty();
             }
         }
-        //public static float ResourceGap => (Settings.vanillaAnimals ? (Settings.TabsOnTop ? ExtendedToolbar.Height : 0f) : animalsRow.FinalY + 26f);
         public static float ResourceGap => (TabsOnTop ? Height : 0f);
-
-
-        //private static bool tabsOnTop = Settings.TabsOnTop;
-
-        //private static Utility.VUIEhelper vuie;
-
-        //public static Utility.VUIEhelper Helper
-        //{
-        //    get
-        //    {
-        //        if (vuie == null)
-        //        {
-        //            vuie = new Utility.VUIEhelper();
-        //        }
-        //        return vuie;
-        //    }
-        //}
 
         public static void Before_MainUIOnGUI()
         {
-            //if (tabsOnTop != Settings.TabsOnTop)
-            //{
-            //    tabsOnTop = Settings.TabsOnTop;
-            //    Find.ColonistBar.MarkColonistsDirty();
-            //}
+
         }
 
         public static void MainUIOnGUI()

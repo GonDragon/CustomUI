@@ -8,7 +8,7 @@ using Verse;
 
 namespace CustomUI.Utility
 {
-    public class ButtonManager : IExposable
+    public class ElementManager : IExposable
     {
         public static List<string> toolbarDefnames = new List<string>();
         public static List<int> toolbarValues = new List<int>();

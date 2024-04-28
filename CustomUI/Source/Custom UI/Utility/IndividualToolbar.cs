@@ -70,14 +70,20 @@ namespace CustomUI.Utility
             {
                 if (!button.Worker.Visible)
                 {
-                    if (button.minimized)
+                    if(button.defName == "Inspect")
+                    {
+                        //Inspect Button is usseles. It never should be shown.
+                        fixedWidthEditMode += 0;
+                        buttonSizesEditMode.Add(0);
+                    }
+                    else if (button.minimized)
                     {
                         fixedWidthEditMode += minimizedWidth;
                         buttonSizesEditMode.Add(minimizedWidth);
                     }
-                    else if (Settings.buttonManager.HasFixedSize(button.defName))
+                    else if (Settings.elementManager.HasFixedSize(button.defName))
                     {
-                        int fixedSize = Settings.buttonManager.GetFixedSize(button.defName);
+                        int fixedSize = Settings.elementManager.GetFixedSize(button.defName);
                         fixedWidthEditMode += fixedSize;
                         buttonSizesEditMode.Add(fixedSize);
                     }
@@ -98,9 +104,9 @@ namespace CustomUI.Utility
                         buttonSizes.Add(minimizedWidth);
                         buttonSizesEditMode.Add(minimizedWidth);
                     }
-                    else if (Settings.buttonManager.HasFixedSize(button.defName))
+                    else if (Settings.elementManager.HasFixedSize(button.defName))
                     {
-                        int fixedSize = Settings.buttonManager.GetFixedSize(button.defName);
+                        int fixedSize = Settings.elementManager.GetFixedSize(button.defName);
 
                         fixedWidth += fixedSize;
                         fixedWidthEditMode += fixedSize;

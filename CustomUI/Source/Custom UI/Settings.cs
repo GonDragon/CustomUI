@@ -19,9 +19,9 @@ namespace CustomUI
         public static bool vanillaWeather = true;
         public static bool vanillaTemperature = true;
 
-        public static ButtonManager buttonManager = new ButtonManager();
+        public static ElementManager elementManager = new ElementManager();
 
-        public static List<MainButtonProxy> mainButtonProxies = new List<MainButtonProxy>();
+        public static List<MainButtonProxy> elementProxie = new List<MainButtonProxy>();
 
         public override void ExposeData()
         {
@@ -34,9 +34,9 @@ namespace CustomUI
             Scribe_Values.Look(ref vanillaWeather, "vanillaWeather", false);
             Scribe_Values.Look(ref vanillaTemperature, "vanillaTemperature", false);
 
-            Scribe_Deep.Look(ref buttonManager, "buttonManager");
+            Scribe_Deep.Look(ref elementManager, "buttonManager");
 
-            Scribe_Collections.Look(ref mainButtonProxies, "buttons" ,LookMode.Deep);
+            Scribe_Collections.Look(ref elementProxie, "buttons" ,LookMode.Deep);
 
             base.ExposeData();
         }

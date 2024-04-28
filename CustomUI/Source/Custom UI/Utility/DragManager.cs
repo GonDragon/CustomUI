@@ -1,4 +1,7 @@
-﻿using System;
+﻿#if DEBUG
+using LudeonTK;
+#endif
+using System;
 using UnityEngine;
 using Verse;
 
