@@ -101,8 +101,7 @@
     <Compile Include="Settings.cs" />
     <Compile Include="Textures.cs" />
     <Compile Include="UIManager.cs" />
-    <Compile Include="Utility\Configs\ButtonConfig.cs" />
-    <Compile Include="Utility\Configs\ElementConfig.cs" />
+    <Compile Include="Utility\Elements\ButtonElement.cs" />
     <Compile Include="Utility\ElementManager.cs" />
     <Compile Include="Utility\CustomToolbar.cs" />
     <Compile Include="Utility\DragManager.cs" />
@@ -111,7 +110,7 @@
     <Compile Include="Utility\MainButtonProxy.cs" />
     <Compile Include="Utility\MainButtonRendererMode.cs" />
     <Compile Include="Utility\MainIconDef.cs" />
-    <Compile Include="Utility\ToolbarElement.cs" />
+    <Compile Include="Utility\Elements\ToolbarElement.cs" />
     <Compile Include="Utility\Workers\WidgetWorker.cs" />
     <Compile Include="Windows\EditMainButton_Window.cs" />
   </ItemGroup>

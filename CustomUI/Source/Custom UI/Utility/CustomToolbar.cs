@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Verse;
+using static RimWorld.BaseGen.SymbolStack;
 
 namespace CustomUI.Utility
 {
@@ -108,7 +109,6 @@ namespace CustomUI.Utility
             for (int i = 0; i < allButtonsInOrder.Count; ++i)
             {
                 MainButtonDef button = allButtonsInOrder[i];
-                if(button.defName == "Inspect") continue;
 
                 //if (!Settings.toolbarDefnames.Contains(button.defName))
                 //{
@@ -215,7 +215,7 @@ namespace CustomUI.Utility
 
         public static void OnChange()
         {
-            allButtonsInOrder.SortBy(x => x.order);
+            Settings.elements.SortBy(x => x.order);
 
             buttonSizeCache.Clear();
             buttonSizeCacheEditMode.Clear();
@@ -225,14 +225,14 @@ namespace CustomUI.Utility
                 toolbar.Initialize();
             }
 
-            for (int i = 0; i < allButtonsInOrder.Count; ++i)
+            for (int i = 0; i < Settings.elements.Count; ++i)
             {
-                string defName = allButtonsInOrder[i].defName;
+                string defName = Settings.elements[i].defName;
                 if (!Settings.elementManager.DefExist(defName)) Settings.elementManager.AddDef(defName);
 
                 IndividualToolbar toolbar = toolbarList[Settings.elementManager.GetToolbar(defName)];
 
-                toolbar.AddButton(allButtonsInOrder[i], i);
+                toolbar.AddButton(Settings.elements[i], i);
                 buttonSizeCache.Add(0);
                 buttonSizeCacheEditMode.Add(0);
             }
@@ -246,7 +246,7 @@ namespace CustomUI.Utility
             UIManager.topBar = !toolbarList[1].empty;
 
             int order = 0;
-            allButtonsInOrder.Do((button) =>
+            Settings.elements.Do((button) =>
             {
                 button.order = order;
                 order += 10;
@@ -280,19 +280,19 @@ namespace CustomUI.Utility
 
         public static void Persist()
         {
-            List<MainButtonProxy> buttonsToAdd = new List<MainButtonProxy>();
+            List<ToolbarElement> elementsToAdd = new List<ToolbarElement>();
             foreach (MainButtonDef buttonDef in allButtonsInOrder)
             {
                 bool found = false;
-                foreach (MainButtonProxy proxy in Settings.elementProxie)
+                foreach (ToolbarElement element in Settings.elements)
                 {
-                    if (proxy.defName == buttonDef.defName)
+                    if (element.defName == buttonDef.defName)
                     {
-                        proxy.visible = buttonDef.buttonVisible;
-                        proxy.toolbar = Settings.elementManager.GetToolbar(buttonDef.defName);
-                        proxy.order = buttonDef.order;
-                        proxy.minimized = buttonDef.minimized;
-                        proxy.iconPath = buttonDef.iconPath;
+                        element.visible = buttonDef.buttonVisible;
+                        element.toolbar = Settings.elementManager.GetToolbar(buttonDef.defName);
+                        element.order = buttonDef.order;
+                        element.iconPath = buttonDef.iconPath;
+                        if (buttonDef.minimized) element.FixSize();
                         found = true;
                         break;
                     }
@@ -300,14 +300,14 @@ namespace CustomUI.Utility
 
                 if (!found)
                 {
-                    MainButtonProxy newButton = new MainButtonProxy(buttonDef.buttonVisible, buttonDef.order, buttonDef.minimized, 0, buttonDef.defName, buttonDef.iconPath); // TODO - Multiple Toolbars
-                    buttonsToAdd.Add(newButton);
+                    ButtonElement newButton = new ButtonElement(buttonDef); // TODO - Multiple Toolbars
+                    elementsToAdd.Add(newButton);
                 }
             }
 
-            foreach (MainButtonProxy button in buttonsToAdd)
+            foreach (ToolbarElement element in elementsToAdd)
             {
-                Settings.elementProxie.Add(button);
+                Settings.elements.Add(element);
             }
 
             SettingsWindow.settings.Write();
@@ -315,22 +315,35 @@ namespace CustomUI.Utility
 
         public static void Sync()
         {
-            if (Settings.elementProxie == null)
+            if (Settings.elements == null)
             {
-                Settings.elementProxie = new List<MainButtonProxy>();
+                Settings.elements = new List<ToolbarElement>();
             }
-            foreach (MainButtonProxy proxy in Settings.elementProxie)
+            foreach (ToolbarElement element in Settings.elements)
             {
                 foreach (MainButtonDef buttonDef in allButtonsInOrder)
                 {
-                    if (buttonDef.defName == proxy.defName)
+                    if (buttonDef.defName == element.defName)
                     {
-                        buttonDef.buttonVisible = proxy.visible;
-                        buttonDef.order = proxy.order;
-                        buttonDef.minimized = proxy.minimized;
-                        buttonDef.iconPath = proxy.iconPath;
+                        buttonDef.buttonVisible = element.visible;
+                        buttonDef.order = element.order;
+                        buttonDef.minimized = element.IsFixed;
+                        buttonDef.iconPath = element.iconPath;
                         Traverse.Create(buttonDef).Field("icon").SetValue(null);
                     }
+                }
+            }
+            foreach (MainButtonDef buttonDef in allButtonsInOrder)
+            {
+                if (!Settings.elements.Any(x => x.defName == buttonDef.defName))
+                {
+                    ButtonElement newButton = new ButtonElement(buttonDef); // TODO - Multiple Toolbars
+                    Settings.elements.Add(newButton);
+
+                    newButton.visible = buttonDef.buttonVisible;
+                    newButton.order = buttonDef.order;
+                    if(buttonDef.minimized) newButton.FixSize();
+                    newButton.iconPath = buttonDef.iconPath;
                 }
             }
         }

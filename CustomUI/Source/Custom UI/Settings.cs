@@ -21,7 +21,7 @@ namespace CustomUI
 
         public static ElementManager elementManager = new ElementManager();
 
-        public static List<MainButtonProxy> elementProxie = new List<MainButtonProxy>();
+        public static List<ToolbarElement> elements = new List<ToolbarElement>();
 
         public override void ExposeData()
         {
@@ -34,9 +34,9 @@ namespace CustomUI
             Scribe_Values.Look(ref vanillaWeather, "vanillaWeather", false);
             Scribe_Values.Look(ref vanillaTemperature, "vanillaTemperature", false);
 
-            Scribe_Deep.Look(ref elementManager, "buttonManager");
+            Scribe_Deep.Look(ref elementManager, "elementManager");
 
-            Scribe_Collections.Look(ref elementProxie, "buttons" ,LookMode.Deep);
+            Scribe_Collections.Look(ref elements, "elements" ,LookMode.Deep);
 
             base.ExposeData();
         }

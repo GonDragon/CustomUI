@@ -1,17 +1,18 @@
-﻿using RimWorld;
+﻿using CustomUI.Utility.Workers;
+using RimWorld;
+using System;
 using UnityEngine;
 using Verse;
 
 namespace CustomUI.Utility
 {
-    public class ButtonConfig : IExposable
+    public class ButtonElement : ToolbarElement
     {
         private MainButtonDef mainButtonDef;
-        public string defName;
 
         private string _iconPath;
         private string _label;
-        public bool minimized;
+        private bool _minimized;
         public bool hideLabel = false;
         public bool forceShow = false;
         private string _shortenedLabel;
@@ -21,36 +22,43 @@ namespace CustomUI.Utility
 
         private Texture2D icon;
         public Texture2D Icon => icon;
+
+        //public override bool Exist => (defName != "Inspect" && Def != null);
+        public override bool Exist => (Def != null);
+
+        public override MainButtonWorker Worker => ((MainButtonDef)Def).Worker;
+
+        public override bool IsFixed => _minimized;
         public void RefreshIcon()
         {
             if (_iconPath != null) icon = ContentFinder<Texture2D>.Get(this._iconPath);
             else icon = null;
         }
 
-        public ButtonConfig(string defName)
+        public ButtonElement(string defName)
         {
             this.defName = defName;
-            minimized = false;
+            _minimized = false;
         }
 
-        public ButtonConfig(MainButtonDef def)
+        public ButtonElement(MainButtonDef def)
         {
             this.defName = def.defName;
             mainButtonDef = def;
             Label = def.label;
             IconPath = def.iconPath;
-            minimized = def.minimized;
+            _minimized = def.minimized;
         }
 
-        public ButtonConfig()
+        public ButtonElement()
         { } //Empty constructor to load from ExposeData
 
-        public void ExposeData()
+        public override void ExposeData()
         {
-            Scribe_Values.Look(ref defName, "defName");
+            base.ExposeData();
             Scribe_Values.Look(ref _iconPath, "iconPath");
             Scribe_Values.Look(ref _label, "label");
-            Scribe_Values.Look(ref minimized, "minimized");
+            Scribe_Values.Look(ref _minimized, "minimized");
             Scribe_Values.Look(ref hideLabel, "hideLabel", false);
             Scribe_Values.Look(ref forceShow, "forceShow", false);
         }
@@ -98,6 +106,16 @@ namespace CustomUI.Utility
         public string ShortenedLabel => _shortenedLabel;
 
         public float ShortenedLabelWidth => cachedShortenedLabelWidth;
+
+        public override void FixSize()
+        {
+            _minimized = true;
+        }
+
+        public override void UnfixSize()
+        {
+            _minimized = false;
+        }
 
         public virtual Def Def
         {
